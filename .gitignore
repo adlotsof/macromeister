@@ -63,3 +63,9 @@ assets/foods_off.db
 assets/foods_common.db
 icon_1024.png
 
+
+# Food-data build artifacts inside tools/ (datasets are re-fetched in CI)
+tools/*.csv
+tools/*.csv.gz
+tools/*.db
+tools/fndds/
