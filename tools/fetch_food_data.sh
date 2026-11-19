@@ -5,6 +5,9 @@
 # Run from anywhere; outputs are copied into ../assets relative to this dir.
 set -euo pipefail
 cd "$(dirname "$0")"
+# The assets/ dir contains no tracked files (the DBs are built here and
+# gitignored), so it doesn't exist in a fresh CI checkout.
+mkdir -p ../assets
 
 BASE="https://raw.githubusercontent.com/ByteBeamLLC/extractor/main/data/nutrition-datasets"
 
