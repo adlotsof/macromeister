@@ -28,9 +28,10 @@ stays on your device — no account, no cloud, no tracking.
 
 The two bundled SQLite food databases (`assets/foods_off.db`,
 `assets/foods_common.db`) are **not** in this repository (too large for git).
-Build them with the scripts in `../fooddb_raw/build_off_db.py` and
-`../usda_raw/build_common_db.py`, then copy the resulting `.db` files into
-`assets/` before building.
+`./tools/fetch_food_data.sh` downloads the public datasets (Open Food Facts
+dump, USDA FNDDS + SR Legacy) and builds both into `assets/`. GitHub Actions
+does this automatically on every push (see `.github/workflows/build.yml`),
+which also publishes the release APK as a build artifact.
 
 ## Build
 
