@@ -8,6 +8,7 @@ import '../../services/food_updates.dart';
 import '../../theme.dart';
 import 'ai_settings.dart';
 import 'data_export.dart';
+import 'data_sources_screen.dart';
 import 'data_visibility.dart';
 import 'habits_screen.dart';
 import 'integrations.dart';
@@ -79,6 +80,15 @@ class MoreScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const IntegrationsScreen())),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.menu_book, color: MtTheme.textDim),
+            title: const Text('Data sources & licenses'),
+            subtitle: const Text('Open Food Facts (ODbL), USDA FoodData Central (CC0)'),
+            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const DataSourcesScreen())),
           ),
           const SizedBox(height: 24),
         ],

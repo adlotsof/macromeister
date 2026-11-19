@@ -41,6 +41,16 @@ flutter build apk --release
 # output: build/app/outputs/flutter-apk/app-release.apk
 ```
 
+## Data sources & licenses
+
+- **Open Food Facts** (bundled `foods_off.db`) — ODbL 1.0: attribution and
+  share-alike apply; the app carries the required attribution in-app
+  (More → "Data sources & licenses") and in `NOTICE.md`.
+- **USDA FoodData Central** (bundled `foods_common.db`) — public domain
+  (CC0 1.0); attributed in-app and in `NOTICE.md`.
+
+See `NOTICE.md` for the full terms.
+
 ## License
 
 Private project. All application code, UI and branding are original.
