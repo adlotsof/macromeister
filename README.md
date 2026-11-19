@@ -1,0 +1,45 @@
+# MacroTrack
+
+A local-first nutrition and macro tracker for Android (Flutter). All data
+stays on your device — no account, no cloud, no tracking.
+
+## Features
+
+- **Food logging** — search 4.5M+ packaged products from a bundled Open Food
+  Facts database (offline), USDA common foods, your own custom foods, and
+  recipes. Barcode scanning and AI-assisted describe-a-meal/label-photo
+  logging (bring your own OpenRouter/OpenAI key).
+- **Adaptive coaching** — weekly check-ins with a documented energy-balance
+  expenditure model that converges on your real intake/weight data, then
+  recomputes daily calorie and macro targets automatically.
+- **Weight & body-fat tracking** — daily weigh-ins with trend calculation.
+- **Habits** — simple daily habit tracking with streaks.
+- **Full data ownership** — per-area CSV exports, one-file JSON backup and
+  restore, and an importer for MacroFactor Excel exports (weights, body-fat,
+  daily totals, custom foods, recipes, program settings and expenditure
+  history).
+- **Food database updates** — incremental Open Food Facts delta updates,
+  checked weekly (or manually from More).
+
+## Requirements
+
+- Flutter (see `pubspec.yaml` for the SDK constraint)
+- Android min SDK 26
+
+The two bundled SQLite food databases (`assets/foods_off.db`,
+`assets/foods_common.db`) are **not** in this repository (too large for git).
+Build them with the scripts in `../fooddb_raw/build_off_db.py` and
+`../usda_raw/build_common_db.py`, then copy the resulting `.db` files into
+`assets/` before building.
+
+## Build
+
+```sh
+flutter pub get
+flutter build apk --release
+# output: build/app/outputs/flutter-apk/app-release.apk
+```
+
+## License
+
+Private project. All application code, UI and branding are original.
