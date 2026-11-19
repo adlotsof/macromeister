@@ -174,7 +174,27 @@ class _RecipesScreenState extends State<RecipesScreen> {
                                     size: 20, color: MtTheme.textDim)),
                             IconButton(
                                 onPressed: () async {
-                                  if (r.id != null) await Db.deleteRecipe(r.id!);
+                                  final ok = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                            title: Text('Delete "${r.name}"?'),
+                                            content: const Text(
+                                                'Logged entries keep their values, '
+                                                'but the recipe is removed from '
+                                                'your recipes.'),
+                                            actions: [
+                                              TextButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, false),
+                                                  child: const Text('Cancel')),
+                                              FilledButton(
+                                                  onPressed: () =>
+                                                      Navigator.pop(ctx, true),
+                                                  child: const Text('Delete')),
+                                            ],
+                                          ));
+                                  if (ok != true || r.id == null) return;
+                                  await Db.deleteRecipe(r.id!);
                                   _reload();
                                 },
                                 icon: const Icon(Icons.delete_outline,
