@@ -85,6 +85,14 @@ class _DashboardViewState extends State<_DashboardView> {
       final v = await Db.getSetting(k);
       settings[k] = v == null || v == '1';
     }
+    // Period/cycle tracking is meaningless for a male profile — hide the
+    // card unless the user explicitly turned it on.
+    if (await Db.getSetting('show_period') == null) {
+      final profile = await Db.loadProfile();
+      if ((profile?.sex ?? 'male') != 'female') {
+        settings['show_period'] = false;
+      }
+    }
     final state = AppState.instance;
     final dateStr = fmtDate(widget.date);
     final totals = await state.totalsFor(dateStr);

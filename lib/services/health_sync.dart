@@ -15,7 +15,14 @@ class HealthSync {
     return null;
   }
 
+  /// True when Health Connect (GHC) is usable on this device.
+  static Future<bool> isAvailable() =>
+      _health.isHealthConnectAvailable();
+
   static Future<bool> requestPermissions() async {
+    // Without Health Connect installed the authorization call may silently
+    // "succeed" — never claim a connection that cannot exist.
+    if (!await isAvailable()) return false;
     try {
       await _health.requestAuthorization(
         [
