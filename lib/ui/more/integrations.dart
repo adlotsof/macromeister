@@ -26,6 +26,18 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
 
   Future<void> _connect() async {
     setState(() => _working = true);
+    if (!await HealthSync.isAvailable()) {
+      if (!mounted) return;
+      setState(() => _working = false);
+      await Db.setSetting('hc_connected', '0');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: MtTheme.danger,
+          content: Text(
+              'Health Connect is not installed on this device — install it '
+              'from the Play Store, then try again.')));
+      return;
+    }
     final ok = await HealthSync.requestPermissions();
     if (!mounted) return;
     setState(() {
@@ -33,7 +45,9 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
       _connected = ok;
     });
     await Db.setSetting('hc_connected', ok ? '1' : '0');
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
         content: Text(ok
             ? 'Health Connect connected'
             : 'Could not connect to Health Connect'),
