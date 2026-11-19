@@ -1,6 +1,7 @@
 // Edit an existing log entry: tap an entry in the diary to change the
 // serving size (gram-based entries) or the absolute macros (zero-gram
 // quick-add entries), or delete the entry.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';

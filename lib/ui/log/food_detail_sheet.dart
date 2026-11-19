@@ -1,4 +1,5 @@
 // Food detail sheet: adjust grams/servings + meal, then log the entry.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
@@ -191,7 +192,7 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
                   OutlinedButton(
                     onPressed: () => _grams.text = '100',
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: MtTheme.textDim.withOpacity(0.4)),
+                      side: BorderSide(color: MtTheme.textDim.withValues(alpha: 0.4)),
                       foregroundColor: MtTheme.textDim,
                     ),
                     child: const Text('100g'),
@@ -225,7 +226,7 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
               SwitchListTile(
                 value: _fasted,
                 onChanged: (v) => setState(() => _fasted = v),
-                activeColor: MtTheme.accent,
+                activeThumbColor: MtTheme.accent,
                 contentPadding: EdgeInsets.zero,
                 dense: true,
                 title: const Text('Fasted (zero-calorie marker)',

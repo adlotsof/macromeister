@@ -4,8 +4,6 @@
 // Daily nutrition totals become one log entry per day ("MacroFactor daily
 // total") — MF exports don't contain the individual foods, so the totals are
 // preserved as a single entry that feeds expenditure/expenditure history.
-import 'dart:io';
-
 import '../app_state.dart';
 import '../db.dart';
 import '../models.dart';

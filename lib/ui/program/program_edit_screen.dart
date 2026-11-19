@@ -1,4 +1,5 @@
 // Program editor: edit profile fields after onboarding.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
@@ -223,14 +224,14 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     value: _customMacros,
-                    activeColor: MtTheme.accent,
+                    activeThumbColor: MtTheme.accent,
                     title: const Text('Customize macro targets'),
                     subtitle: const Text(
                         'Fixed protein & fat grams/day, carbs fill the rest'),
                     onChanged: _setCustomMacros,
                   ),
                   if (_customMacros) ...[
-                    Text('Target ${_macroTargetKcal} kcal/day',
+                    Text('Target $_macroTargetKcal kcal/day',
                         style:
                             const TextStyle(color: MtTheme.textDim, fontSize: 12)),
                     const SizedBox(height: 10),

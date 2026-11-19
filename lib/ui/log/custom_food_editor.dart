@@ -2,6 +2,7 @@
 // or from a nutrition-label photo (OCR), then optionally log it right away.
 import 'dart:io';
 
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -266,7 +267,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
         OutlinedButton.icon(
           onPressed: _ocrLoading ? null : _pickLabelSource,
           style: OutlinedButton.styleFrom(
-            side: BorderSide(color: MtTheme.textDim.withOpacity(0.4)),
+            side: BorderSide(color: MtTheme.textDim.withValues(alpha: 0.4)),
             foregroundColor: MtTheme.text,
           ),
           icon: _ocrLoading
@@ -351,7 +352,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
         OutlinedButton(
           onPressed: () => _save(alsoLog: false),
           style: OutlinedButton.styleFrom(
-            side: BorderSide(color: MtTheme.textDim.withOpacity(0.4)),
+            side: BorderSide(color: MtTheme.textDim.withValues(alpha: 0.4)),
             foregroundColor: MtTheme.text,
           ),
           child: const Text('Save to my foods'),
@@ -362,6 +363,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
             onPressed: _deleting
                 ? null
                 : () async {
+                    final navigator = Navigator.of(context);
                     final ok = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
@@ -382,7 +384,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
                     setState(() => _deleting = true);
                     await Db.deleteFood(widget.existing!.id!);
                     AppState.instance.refresh();
-                    if (mounted) Navigator.of(context).pop();
+                    if (mounted) navigator.pop();
                   },
             style: TextButton.styleFrom(foregroundColor: MtTheme.danger),
             icon: const Icon(Icons.delete_outline, size: 18),

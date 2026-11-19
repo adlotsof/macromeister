@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -855,7 +856,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
             _fasted = v;
             if (v) _error = null; // stale validation error is confusing
           }),
-          activeColor: MtTheme.accent,
+          activeThumbColor: MtTheme.accent,
           contentPadding: EdgeInsets.zero,
           title: const Text('Fasted (zero-calorie marker)'),
         ),

@@ -1,4 +1,5 @@
 // Onboarding: first-run program setup wizard.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
@@ -269,15 +270,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _title('Activity level', 'Your typical day-to-day movement, outside training.'),
-          ..._activityLevels.map((a) => RadioListTile<double>(
-                value: a.$2,
-                groupValue: _activity,
-                onChanged: (v) => setState(() => _activity = v!),
-                title: Text(a.$1),
-                subtitle: Text('×${a.$2.toStringAsFixed(1)}',
-                    style: const TextStyle(color: MtTheme.textDim, fontSize: 12)),
-                activeColor: MtTheme.accent,
-              )),
+          RadioGroup<double>(
+            groupValue: _activity,
+            onChanged: (v) => setState(() => _activity = v!),
+            child: Column(
+              children: _activityLevels
+                  .map((a) => RadioListTile<double>(
+                        value: a.$2,
+                        title: Text(a.$1),
+                        subtitle: Text('×${a.$2.toStringAsFixed(1)}',
+                            style: const TextStyle(
+                                color: MtTheme.textDim, fontSize: 12)),
+                        activeColor: MtTheme.accent,
+                      ))
+                  .toList(),
+            ),
+          ),
         ],
       );
 

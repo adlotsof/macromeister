@@ -1,4 +1,5 @@
 // Data visibility: toggles that show/hide optional dashboard cards.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../db.dart';

@@ -1,4 +1,5 @@
 // Integrations: Health Connect connect/sync status.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../db.dart';
@@ -30,6 +31,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
       if (!mounted) return;
       setState(() => _working = false);
       await Db.setSetting('hc_connected', '0');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: MtTheme.danger,

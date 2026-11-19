@@ -1,5 +1,6 @@
 // AI settings: provider (OpenRouter / OpenAI), key entry (masked), model,
 // save, and a live connection test.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../db.dart';

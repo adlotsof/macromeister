@@ -1,5 +1,6 @@
 // Habits: create, delete, mark done, streak counts. Backs the dashboard
 // habits card (previously the DB layer existed but no management UI).
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';

@@ -2,6 +2,7 @@
 // steps. Totals are computed live and stored per serving.
 import 'dart:convert';
 
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../db.dart';

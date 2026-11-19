@@ -1,5 +1,6 @@
 // Barcode scan screen using mobile_scanner; resolves the GTIN via
 // Open Food Facts and returns a Food? to the caller.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 

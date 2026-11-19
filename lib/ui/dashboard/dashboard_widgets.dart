@@ -1,6 +1,7 @@
 // Shared small widgets for the dashboard.
 import 'dart:math' as math;
 
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../theme.dart';

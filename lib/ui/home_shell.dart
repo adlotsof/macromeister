@@ -1,4 +1,5 @@
 // Bottom navigation shell: Dashboard | Log | (+) | Program | More
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../app_state.dart';

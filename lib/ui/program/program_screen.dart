@@ -1,4 +1,5 @@
 // Program screen: program overview, current targets, check-in history.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';

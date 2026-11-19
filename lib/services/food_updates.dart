@@ -118,7 +118,7 @@ class FoodUpdates {
       if (name.isEmpty || name.length > 120) continue;
       final nutr = (p['nutriments'] as Map<String, dynamic>?) ??
           const <String, dynamic>{};
-      double? _n(String key) {
+      double? numOf(String key) {
         final v = nutr[key];
         if (v is num) {
           final d = v.toDouble();
@@ -127,9 +127,9 @@ class FoodUpdates {
         return null;
       }
 
-      var kcal = _n('energy-kcal_100g');
+      var kcal = numOf('energy-kcal_100g');
       if (kcal == null) {
-        final kj = _n('energy_100g');
+        final kj = numOf('energy_100g');
         if (kj != null) kcal = kj / 4.184;
       }
       if (kcal != null && kcal <= 0) kcal = null;
@@ -138,7 +138,7 @@ class FoodUpdates {
       final country = countries.isEmpty
           ? ''
           : (countries.first as String).replaceFirst('en:', '').trim();
-      double? _g(String key) {
+      double? gramOf(String key) {
         final v = p[key];
         if (v is num) {
           final d = v.toDouble();
@@ -156,16 +156,16 @@ class FoodUpdates {
         country.isEmpty
             ? null
             : country.substring(0, country.length.clamp(0, 24)),
-        _g('serving_quantity'),
+        gramOf('serving_quantity'),
         kcal == null ? null : (kcal * 10).round() / 10,
-        _n('proteins_100g') == null
+        numOf('proteins_100g') == null
             ? null
-            : (_n('proteins_100g')! * 10).round() / 10,
-        _n('carbohydrates_100g') == null
+            : (numOf('proteins_100g')! * 10).round() / 10,
+        numOf('carbohydrates_100g') == null
             ? null
-            : (_n('carbohydrates_100g')! * 10).round() / 10,
-        _n('fat_100g') == null ? null : (_n('fat_100g')! * 10).round() / 10,
-        _n('fiber_100g') ?? 0.0,
+            : (numOf('carbohydrates_100g')! * 10).round() / 10,
+        numOf('fat_100g') == null ? null : (numOf('fat_100g')! * 10).round() / 10,
+        numOf('fiber_100g') ?? 0.0,
       ]);
       if (batchArgs.length >= batch) {
         await _execBatch(db, batchArgs);

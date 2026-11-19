@@ -111,7 +111,7 @@ class Db {
 
   /// The bundled full Open Food Facts database (all ~4.9M named products).
   /// Copied out of the APK on first use; re-copied when the bundled version
-  /// changes (marker file 'foods_off.db.v<N>').
+  /// changes (marker file `foods_off.db.v<N>`).
   static const int _foodsDbVersion = 3;
   /// Newest OFF delta end-timestamp at bundle build time (updates after this
   /// are applied from the daily deltas; see lib/services/food_updates.dart).

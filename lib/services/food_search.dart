@@ -55,11 +55,11 @@ Future<Food?> lookupOffBarcode(String barcode) async {
 
 Food? _foodFromProduct(Map<String, dynamic> p, {String? offId}) {
   final nutriments = p['nutriments'] as Map<String, dynamic>? ?? {};
-  double? _num(dynamic v) =>
+  double? numOf(dynamic v) =>
       v == null ? null : double.tryParse(v.toString().replaceAll(',', '.'));
-  final kcal100 = _num(nutriments['energy-kcal_100g']) ??
-      (_num(nutriments['energy_100g']) != null
-          ? _num(nutriments['energy_100g'])! / 4.184
+  final kcal100 = numOf(nutriments['energy-kcal_100g']) ??
+      (numOf(nutriments['energy_100g']) != null
+          ? numOf(nutriments['energy_100g'])! / 4.184
           : null);
   if (kcal100 == null) return null;
   final name = (p['product_name'] ??
@@ -71,12 +71,12 @@ Food? _foodFromProduct(Map<String, dynamic> p, {String? offId}) {
   return Food(
     name: name.trim(),
     brand: brands.split(',').first.trim(),
-    servingG: _num(p['serving_quantity']) ?? 100,
+    servingG: numOf(p['serving_quantity']) ?? 100,
     kcal: kcal100,
-    protein: _num(nutriments['proteins_100g']) ?? 0,
-    carbs: _num(nutriments['carbohydrates_100g']) ?? 0,
-    fat: _num(nutriments['fat_100g']) ?? 0,
-    fiber: _num(nutriments['fiber_100g']) ?? 0,
+    protein: numOf(nutriments['proteins_100g']) ?? 0,
+    carbs: numOf(nutriments['carbohydrates_100g']) ?? 0,
+    fat: numOf(nutriments['fat_100g']) ?? 0,
+    fiber: numOf(nutriments['fiber_100g']) ?? 0,
     source: 'off',
     offId: offId ?? (p['code'] as String?),
   );

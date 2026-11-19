@@ -1,5 +1,6 @@
 // Daily food log: date navigation, per-meal sections with entries,
 // day totals vs targets, swipe to delete.
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
@@ -290,11 +291,11 @@ class _MealSection extends StatelessWidget {
                       showAddFoodSheet(context, date: date, meal: meal),
                   child: Row(
                     children: [
-                      Icon(Icons.add, size: 16, color: MtTheme.textDim.withOpacity(0.7)),
+                      Icon(Icons.add, size: 16, color: MtTheme.textDim.withValues(alpha: 0.7)),
                       const SizedBox(width: 6),
                       Text('Add food',
                           style: TextStyle(
-                              fontSize: 13, color: MtTheme.textDim.withOpacity(0.7))),
+                              fontSize: 13, color: MtTheme.textDim.withValues(alpha: 0.7))),
                     ],
                   ),
                 ),

@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:fl_chart/fl_chart.dart';
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
