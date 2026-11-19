@@ -210,7 +210,7 @@ class MfXlsx {
     for (final r in _sheet(excel, 'Recipes')) {
       final name = _s(r['recipe name']);
       if (name.isEmpty) continue;
-      final servings = _n(r['serving qty']) ?? 1;
+      final servings = (_n(r['serving qty']) ?? 1) < 1 ? 1 : _n(r['serving qty'])!;
       double div(Object? k) => (_n(r[k]) ?? 0) / servings;
       final ing = _s(r['ingredients'])
           .split('\n')

@@ -199,7 +199,12 @@ class DataExportScreen extends StatelessWidget {
     final s = await Db.workoutSessions(limit: 10000);
     final buf = StringBuffer('date,name,duration_min,exercise,set,reps,weight_kg\n');
     for (final sess in s) {
-      final exercises = (jsonDecode(sess.exercisesJson) as List? ?? []);
+      final List exercises;
+      try {
+        exercises = (jsonDecode(sess.exercisesJson) as List? ?? []);
+      } catch (_) {
+        continue; // one corrupt row must not abort the whole export
+      }
       for (final e in exercises.whereType<Map>()) {
         final sets = (e['sets'] as List? ?? []);
         for (var i = 0; i < sets.length; i++) {

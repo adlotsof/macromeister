@@ -368,11 +368,14 @@ class _SearchTabState extends State<_SearchTab> {
                       onTap: () => openFoodDetailSheet(context, f,
                           date: widget.date, meal: widget.meal),
                       onLongPress: () {
-                        Navigator.of(context).pop();
+                        // Capture the navigator BEFORE popping: after the
+                        // pop this context is deactivated.
+                        final nav = Navigator.of(context);
+                        nav.pop();
                         // CustomFoodEditor has no Scaffold of its own (it is
                         // normally embedded in this sheet) — wrap it so the
                         // pushed route provides Material.
-                        Navigator.of(context).push(MaterialPageRoute(
+                        nav.push(MaterialPageRoute(
                             builder: (_) => Scaffold(
                                   backgroundColor: MtTheme.bg,
                                   appBar: AppBar(
@@ -800,8 +803,6 @@ class _QuickAddTabState extends State<_QuickAddTab> {
       double.tryParse(c.text.trim().replaceAll(',', '.')) ?? 0;
 
   Future<void> _save() async {
-    // ignore: avoid_print
-    print('QUICKADD save fasted=$_fasted kcalText=${_kcal.text}');
     final kcal = _num(_kcal);
     final p = _num(_protein);
     final c = _num(_carbs);
@@ -942,10 +943,12 @@ class _RecipeTabState extends State<_RecipeTab> {
     if (mounted) Navigator.of(context).pop();
   }
 
-  Future<int?> _pickServings(int current) => showDialog<int>(
+  Future<int?> _pickServings(int current) async {
+    final c = TextEditingController(text: current.toString());
+    try {
+      final result = await showDialog<int>(
         context: context,
         builder: (context) {
-          final c = TextEditingController(text: current.toString());
           String? error;
           return StatefulBuilder(builder: (context, setD) {
             return AlertDialog(
@@ -980,6 +983,11 @@ class _RecipeTabState extends State<_RecipeTab> {
           });
         },
       );
+      return result;
+    } finally {
+      c.dispose();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
