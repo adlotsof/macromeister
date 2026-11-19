@@ -1045,9 +1045,9 @@ class _PhotosCard extends StatelessWidget {
                 itemBuilder: (context, i) {
                   final p = photos[i];
                   return GestureDetector(
-                    onTap: () => Share.shareXFiles(
-                        [XFile(p.path)],
-                        text: 'Progress photo ${p.date}'),
+                    onTap: () => SharePlus.instance.share(ShareParams(
+                        files: [XFile(p.path)],
+                        text: 'Progress photo ${p.date}')),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: SizedBox(

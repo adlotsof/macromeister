@@ -61,9 +61,9 @@ class DataExportScreen extends StatelessWidget {
             ));
     if (confirmed != true || !context.mounted) return;
     try {
-      final res = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
           type: FileType.custom, allowedExtensions: ['json']);
-      final path = res?.files.single.path;
+      final path = files.isEmpty ? null : files.first.path;
       if (path == null || !context.mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Restoring...')));
@@ -92,11 +92,11 @@ class DataExportScreen extends StatelessWidget {
 
   Future<void> _importMfXlsx(BuildContext context) async {
     try {
-      final res = await FilePicker.platform.pickFiles(
+      final files = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['xlsx'],
       );
-      final path = res?.files.single.path;
+      final path = files.isEmpty ? null : files.first.path;
       if (path == null || !context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Importing MacroFactor export...')));
@@ -147,8 +147,9 @@ class DataExportScreen extends StatelessWidget {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/macrotrack_$name.csv');
       await file.writeAsString('\uFEFF$csv', encoding: utf8);
-      await Share.shareXFiles([XFile(file.path, mimeType: 'text/csv')],
-          text: 'MacroTrack export: $name');
+      await SharePlus.instance.share(ShareParams(
+          files: [XFile(file.path, mimeType: 'text/csv')],
+          text: 'MacroTrack export: $name'));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

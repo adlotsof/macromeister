@@ -18,6 +18,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Runner images ship ~15 GB of preinstalled toolchains we don't need
+      # (dotnet, Haskell, CodeQL, Docker images, extra toolcache). The food-DB
+      # build alone needs ~2.5 GB (1.5 GB OFF dump + DB) and the Flutter/Android
+      # build several more, so without this the merge step dies with
+      # "No space left on device". Android SDK is kept — the app needs it.
+      - name: Free up runner disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/local/lib/node_modules \
+            /usr/local/share/chrome /usr/local/share/chromium \
+            /usr/local/share/powershell /etc/mysql /etc/php
+          sudo docker image prune -af >/dev/null 2>&1 || true
+          echo "free after cleanup:"; df -h / | tail -1
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -31,17 +45,14 @@ jobs:
           cache: true
 
       # The two bundled food databases are built from public datasets on every
-      # run; the raw downloads (~1.5 GB OFF + ~60 MB USDA) are cached by day.
-      - name: Cache raw food datasets
-        uses: actions/cache@v4
-        with:
-          path: tools/
-          key: food-data-${{ github.event.head_commit.timestamp || github.run_id }}
-          restore-keys: |
-            food-data-
-
+      # run (~1.5 GB OFF + ~60 MB USDA). Raw datasets are NOT cached — caching
+      # would pin ~1.5 GB on the runner for the whole job and the APK asset
+      # merge previously died with "No space left on device".
       - name: Build food databases
         run: ./tools/fetch_food_data.sh
+
+      - name: Remove raw food datasets
+        run: rm -f tools/*.csv tools/*.csv.gz tools/fndds/*.csv
 
       - name: Verify bundled databases exist
         run: |
@@ -50,6 +61,12 @@ jobs:
           ls -la assets/*.db
 
       - run: flutter pub get
+
+      # health 13.x still applies 'kotlin-android', which fails under AGP 9
+      # with built-in Kotlin (android.builtInKotlin=true). Patch the pub-cache
+      # copy of the plugin; pub cache is clean on every CI run.
+      - name: Patch health plugin for built-in Kotlin
+        run: chmod +x tools/patch_health_plugin.sh && ./tools/patch_health_plugin.sh
 
       - name: Analyze
         run: flutter analyze
