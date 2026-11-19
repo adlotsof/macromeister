@@ -171,6 +171,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
       return;
     }
     setState(() {
+      _error = null; // success clears any stale banner
       _name.text = food.name;
       _serving.text = _numStr(food.servingG);
       _kcal.text = _numStr(food.kcal);

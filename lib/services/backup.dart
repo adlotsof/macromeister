@@ -69,8 +69,10 @@ class Backup {
       throw FormatException('Not a MacroTrack backup file.');
     }
     final version = data['version'];
-    if (version is int && version > _version) {
-      throw FormatException('Backup from a newer app version.');
+    if (version is! int || version > _version) {
+      // Missing or non-int version means the file is not a backup this
+      // build produced — refuse rather than importing blindly.
+      throw FormatException('Unsupported backup version.');
     }
     final db = await Db.instance;
     int restored = 0;

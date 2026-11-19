@@ -82,7 +82,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
         fiber: e.fiber * per100 * g / 100,
         fasted: e.fasted,
       );
-      _saving = true;
+      setState(() => _saving = true);
       await Db.updateLog(updated);
     } else {
       // Quick-add style entries carry absolute totals.
@@ -101,7 +101,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
         fiber: e.fiber,
         fasted: e.fasted,
       );
-      _saving = true;
+      setState(() => _saving = true);
       await Db.updateLog(updated);
     }
     AppState.instance.refresh();
@@ -109,7 +109,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
   }
 
   Future<void> _delete() async {
-    _saving = true;
+    setState(() => _saving = true);
     await Db.deleteLog(widget.entry.id!);
     AppState.instance.refresh();
     if (mounted) Navigator.of(context).pop();
