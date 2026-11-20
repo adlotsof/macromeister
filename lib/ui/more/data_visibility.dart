@@ -36,6 +36,9 @@ class _DataVisibilityScreenState extends State<DataVisibilityScreen> {
     _VisibilityItem('show_water', 'Water',
         'Daily hydration tracking with quick +250/+500 ml buttons',
         Icons.water_drop),
+    _VisibilityItem('show_micros', 'Micronutrients',
+        'Intake vs. targets for vitamins and minerals',
+        Icons.medication_liquid),
   ];
 
   final Map<String, bool> _values = {};
