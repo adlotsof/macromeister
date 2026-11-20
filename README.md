@@ -43,15 +43,16 @@ flutter build apk --release
 
 ## Releases
 
-- **Tag → GitHub Release + Play internal track.** Pushing a tag `v*` runs
-  `.github/workflows/release.yml`: it builds a signed AAB + APK, attaches the
-  APK to a GitHub Release and uploads the AAB to the Google Play **internal**
-  track.
+- **Merge → GitHub Release + Play internal track.** Every push to main that
+  passes the test+build workflow triggers `.github/workflows/release.yml`:
+  it tags the released commit (`v<base>+<run number>`), builds a signed AAB
+  + APK, attaches the APK to a GitHub Release and uploads the AAB to the
+  Google Play **internal** track. Pushing a tag `v*` manually also releases.
 - **Semi-annual maintenance release.** `.github/workflows/maintenance-release.yml`
   runs on Jan 1 and Jul 1 (Google Play deactivates accounts without an app
-  update for ~6 months): it bumps the build number, commits + tags, which
-  triggers the release workflow, and uploads the bundle to the internal track.
-  Run it on demand via *workflow_dispatch*.
+  update for ~6 months): it bumps the build number, tags the commit and
+  uploads the bundle to the internal track directly (a GITHUB_TOKEN push
+  cannot trigger the release workflow). Run on demand via *workflow_dispatch*.
 - **Signing.** Release signing uses `android/key.properties` + a keystore,
   both gitignored. Locally, drop them into place; on CI they are injected
   from secrets (see below). Without them the build falls back to the debug

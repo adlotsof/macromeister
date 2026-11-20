@@ -1,7 +1,13 @@
 name: release
 
-# Pushing a tag v* (typically on a merge to main) builds a signed AAB, adds
-# it to a GitHub Release and uploads it to the Google Play INTERNAL track.
+# Every successful build on main (i.e. every merge that passed test+build)
+# is released: a version tag is created, a signed AAB + APK are built, the
+# APK is attached to a GitHub Release and the AAB is uploaded to the Google
+# Play INTERNAL track.
+#
+# NOTE: triggered via workflow_run because pushes made with GITHUB_TOKEN
+# (e.g. the tag job's) do not trigger other workflows. Manual tag pushes
+# still work too.
 #
 # Required GitHub secrets (Settings -> Secrets and variables -> Actions):
 #   ANDROID_KEYSTORE_BASE64   base64 of the release keystore
@@ -12,10 +18,13 @@ name: release
 #   PLAY_SERVICE_ACCOUNT_JSON full contents of the Play Console service
 #                             account JSON (API access granted, internal track)
 #
-# If the Play secrets are missing the job still builds and publishes the
-# GitHub Release but skips the Play upload.
+# If the Play secrets are missing the job still builds, tags and publishes
+# the GitHub Release but skips the Play upload.
 
 on:
+  workflow_run:
+    workflows: ['build']
+    types: [completed]
   push:
     tags: ['v*']
 
@@ -28,6 +37,10 @@ concurrency:
 
 jobs:
   release:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -35,7 +48,42 @@ jobs:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
+      - name: Resolve commit to release
+        id: rev
+        run: |
+          # workflow_run events arrive after the triggering run finished; a
+          # newer main push may already exist — release exactly the commit
+          # that was built and tested.
+          if [ -n "${{ github.event.workflow_run.head_sha }}" ]; then
+            echo "sha=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.rev.outputs.sha }}
+
+      - name: Create version tag (base from pubspec + run number)
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="${{ github.ref_name }}"
+          else
+            BASE="$(grep -m1 '^version:' pubspec.yaml | sed 's/^version:[[:space:]]*//' | cut -d+ -f1)"
+            TAG="v${BASE}+${RUN_NUMBER}"
+          fi
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          git config user.name "release-bot"
+          git config user.email "actions@github.com"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "tag $TAG already exists"
+          else
+            git tag -a "$TAG" -m "Auto release (run ${RUN_NUMBER})"
+            git push origin "$TAG"
+          fi
+        id: tag
 
       - name: Free up runner disk space
         run: |
@@ -96,6 +144,7 @@ jobs:
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
           generate_release_notes: true
           files: build/app/outputs/flutter-apk/app-release.apk
 

@@ -111,28 +111,6 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 14
 
-  tag:
-    # Every merge to main that passes test+build gets a version tag, which
-    # triggers release.yml (GitHub Release + Play internal track).
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [test, build]
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Tag with pubspec base version + run number
-        env:
-          RUN_NUMBER: ${{ github.run_number }}
-        run: |
-          BASE="$(grep -m1 '^version:' pubspec.yaml | sed 's/^version:[[:space:]]*//' | cut -d+ -f1)"
-          TAG="v${BASE}+${RUN_NUMBER}"
-          git config user.name "release-bot"
-          git config user.email "actions@github.com"
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            echo "tag $TAG already exists; skipping"
-          else
-            git tag -a "$TAG" -m "Auto release from main (run ${RUN_NUMBER})"
-            git push origin "$TAG"
-          fi
+# NOTE: releasing happens in .github/workflows/release.yml, triggered by
+# workflow_run on this workflow's successful main runs (a GITHUB_TOKEN push
+# cannot trigger another workflow, so tagging from here would be a no-op).

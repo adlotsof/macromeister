@@ -109,16 +109,14 @@ jobs:
           else
             echo "tag_pushed=false" >> "$GITHUB_OUTPUT"
           fi
-          # A successful tag push triggers .github/workflows/release.yml,
-          # which uploads the bundle to the internal track and attaches the
-          # APK; the fallback upload below is skipped in that case so Play
-          # never sees the same versionCode twice.
+          # The tag is a version marker only; the direct upload below is the
+          # actual Play path (GITHUB_TOKEN pushes cannot trigger release.yml).
 
-      - name: Upload bundle directly to internal track (fallback)
-        # Only when the tag push above did NOT trigger a release run
-        # (e.g. the tag already existed) — otherwise release.yml handles it
-        # and a second upload would collide on the version code.
-        if: ${{ steps.bump.outputs.tag_pushed != 'true' && env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+      - name: Upload bundle directly to internal track
+        # GITHUB_TOKEN tag pushes cannot trigger release.yml, so this is the
+        # maintenance run's actual Play path; it uploads the bundle it just
+        # built (build number = today's date, unique per day).
+        if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
         uses: r0adkll/upload-google-play@eb49699984a39f23558439581660aa6f088acfd6 # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
