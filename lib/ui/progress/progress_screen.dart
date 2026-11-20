@@ -1,10 +1,10 @@
 // Progress & analytics: weight trend, daily intake bars, and the progress
 // photo timeline in one screen (MacroFactor parity gap #10). All data comes
 // from the existing Db layer; charts use fl_chart like the dashboard.
-// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'dart:io';
 
 import 'package:fl_chart/fl_chart.dart';
+// ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
 import '../../app_state.dart';

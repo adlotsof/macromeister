@@ -4,6 +4,7 @@
 //
 // Pure formatting lives in [widgetStrings] and is unit-tested; the plugin
 // calls are fire-and-forget guarded so a widget failure never breaks logging.
+import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../app_state.dart';
@@ -53,7 +54,7 @@ class WidgetSync {
     } catch (e, st) {
       // Widget unavailable (tests, non-Android) — ignore. Debug builds log.
       assert(() {
-        print('WidgetSync.push failed: $e\n$st');
+        debugPrint('WidgetSync.push failed: $e\n$st');
         return true;
       }());
     }
