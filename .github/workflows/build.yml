@@ -27,6 +27,11 @@ jobs:
 
       - run: flutter pub get
 
+      # The bundled food DBs are built in the build job; the analyzer only
+      # needs the files declared in pubspec.yaml to exist.
+      - name: Stub bundled food databases
+        run: mkdir -p assets && touch assets/foods_off.db assets/foods_common.db
+
       - name: Analyze
         run: flutter analyze
 
