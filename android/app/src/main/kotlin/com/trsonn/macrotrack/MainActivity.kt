@@ -1,4 +1,4 @@
-package de.trsonn.macrotrack
+package com.trsonn.macrotrack
 
 import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
@@ -13,7 +13,7 @@ import java.io.FileOutputStream
  * the app for the 668 MB food database; AssetManager streams it instead.
  */
 class MainActivity : FlutterActivity() {
-    private val channelName = "de.trsonn.macrotrack/asset_copy"
+    private val channelName = "com.trsonn.macrotrack/asset_copy"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

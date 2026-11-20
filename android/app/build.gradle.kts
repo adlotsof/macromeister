@@ -18,7 +18,7 @@ if (hasReleaseSigning) {
 }
 
 android {
-    namespace = "de.trsonn.macrotrack"
+    namespace = "com.trsonn.macrotrack"
     compileSdk = 36  // health plugin's Health Connect client requires API 35+
     ndkVersion = flutter.ndkVersion
 
@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "de.trsonn.macrotrack"
+        applicationId = "com.trsonn.macrotrack"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26 // Health Connect requires API 26+ (health plugin)

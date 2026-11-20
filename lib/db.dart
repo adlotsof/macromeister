@@ -31,7 +31,7 @@ class Db {
     final file = p.join(dir, 'foods_common.db');
     final marker = p.join(dir, 'foods_common.db.v$_commonDbVersion');
     if (!File(marker).existsSync()) {
-      const channel = MethodChannel('de.trsonn.macrotrack/asset_copy');
+      const channel = MethodChannel('com.trsonn.macrotrack/asset_copy');
       await channel.invokeMethod<void>('copyAsset', {
         'asset': 'flutter_assets/assets/foods_common.db',
         'dest': file,
@@ -145,7 +145,7 @@ class Db {
       // the whole file into RAM and OOM-kill the app). The native side is
       // crash-safe: temp file -> atomic rename, so a mid-copy death redoes
       // the copy cleanly on next launch.
-      const channel = MethodChannel('de.trsonn.macrotrack/asset_copy');
+      const channel = MethodChannel('com.trsonn.macrotrack/asset_copy');
       await channel.invokeMethod<void>('copyAsset', {
         // Flutter packs assets under 'flutter_assets/' inside the APK, so the
         // host AssetManager must use that prefix (bare 'assets/...' throws
