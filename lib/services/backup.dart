@@ -27,6 +27,7 @@ class Backup {
     'workout_sessions',
     'period_entries',
     'photos',
+    'hydration',
     'settings',
   ];
 

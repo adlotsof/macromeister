@@ -33,6 +33,9 @@ class _DataVisibilityScreenState extends State<DataVisibilityScreen> {
         'Weight and body-fat trends', Icons.monitor_weight_outlined),
     _VisibilityItem('show_energy_balance', 'Energy balance',
         'Intake vs. expenditure chart', Icons.swap_vert),
+    _VisibilityItem('show_water', 'Water',
+        'Daily hydration tracking with quick +250/+500 ml buttons',
+        Icons.water_drop),
   ];
 
   final Map<String, bool> _values = {};

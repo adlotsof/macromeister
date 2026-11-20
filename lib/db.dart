@@ -188,12 +188,16 @@ class Db {
     final dir = await getDatabasesPath();
     final db = await openDatabase(
         p.join(dir, dbPathOverride ?? 'macrotrack.db'),
-        version: 2,
+        version: 3,
         onUpgrade: (db, from, to) async {
       if (from < 2) {
         // MacroFactor body-metrics import carries body-fat %; add the column.
         await db.execute(
             'ALTER TABLE weights ADD COLUMN fat_percent REAL');
+      }
+      if (from < 3) {
+        await db.execute(
+            'CREATE TABLE IF NOT EXISTS hydration(date TEXT PRIMARY KEY, ml INTEGER)');
       }
     },
         onCreate: (db, v) async {
@@ -256,6 +260,8 @@ class Db {
         )''');
       await db.execute(
           'CREATE TABLE photos(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, path TEXT, weight_kg REAL)');
+      await db.execute(
+          'CREATE TABLE hydration(date TEXT PRIMARY KEY, ml INTEGER)');
       await db.execute('CREATE TABLE settings(k TEXT PRIMARY KEY, v TEXT)');
     });
     return db;
@@ -475,6 +481,30 @@ class Db {
   static Future<List<ProgressPhoto>> photos() async {
     final rows = await (await instance).query('photos', orderBy: 'date DESC');
     return rows.map(ProgressPhoto.fromMap).toList();
+  }
+
+  // ---- hydration ----
+  /// Adds [ml] to the day's hydration total (default 0) and returns the new
+  /// total. Negative values subtract but never go below 0.
+  static Future<int> addWater(String date, int ml) async {
+    final db = await instance;
+    final newMl = (await waterMl(date) + ml).clamp(0, 10000);
+    await db.insert('hydration', {'date': date, 'ml': newMl},
+        conflictAlgorithm: ConflictAlgorithm.replace);
+    return newMl;
+  }
+
+  static Future<int> waterMl(String date) async {
+    final rows = await (await instance)
+        .query('hydration', where: 'date = ?', whereArgs: [date], limit: 1);
+    return (rows.isEmpty ? null : rows.first['ml'] as int?) ?? 0;
+  }
+
+  /// Sets the day's total explicitly (used by the card's reset/undo).
+  static Future<void> setWaterMl(String date, int ml) async {
+    await (await instance).insert('hydration',
+        {'date': date, 'ml': ml.clamp(0, 10000)},
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   // ---- settings ----

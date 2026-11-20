@@ -46,6 +46,7 @@ class _DashboardViewState extends State<_DashboardView> {
     'show_photos',
     'show_body_metrics',
     'show_energy_balance',
+    'show_water',
   ];
 
   Future<_DashData>? _future;
@@ -114,6 +115,8 @@ class _DashboardViewState extends State<_DashboardView> {
     Profile? profile;
     CheckIn? lastCheckIn;
     int steps = 0;
+    int waterMl = 0;
+    int waterGoal = 3000;
 
     // Profile is needed for the check-in prompt and program info regardless
     // of whether the body-metrics tile is visible.
@@ -136,6 +139,11 @@ class _DashboardViewState extends State<_DashboardView> {
     if (settings['show_steps']!) {
       steps = await HealthSync.stepsForDate(widget.date);
     }
+    if (settings['show_water']!) {
+      waterMl = await Db.waterMl(dateStr);
+      waterGoal =
+          int.tryParse(await Db.getSetting('water_goal_ml') ?? '') ?? 3000;
+    }
 
     return _DashData(
       settings: settings,
@@ -150,6 +158,8 @@ class _DashboardViewState extends State<_DashboardView> {
       period: period,
       photos: photos,
       steps: steps,
+      waterMl: waterMl,
+      waterGoal: waterGoal,
     );
   }
 
@@ -207,6 +217,13 @@ class _DashboardViewState extends State<_DashboardView> {
                   if (data.settings['show_steps']!) ...[
                     const SizedBox(height: 12),
                     _StepsCard(data: data),
+                  ],
+                  if (data.settings['show_water']!) ...[
+                    const SizedBox(height: 12),
+                    _WaterCard(
+                        data: data,
+                        dateStr: fmtDate(widget.date),
+                        onChanged: _reload),
                   ],
                   if (data.settings['show_habits']!) ...[
                     const SizedBox(height: 12),
@@ -283,6 +300,8 @@ class _DashData {
   final List<PeriodEntry> period;
   final List<ProgressPhoto> photos;
   final int steps;
+  final int waterMl;
+  final int waterGoal;
   _DashData({
     required this.settings,
     required this.totals,
@@ -296,6 +315,8 @@ class _DashData {
     required this.period,
     required this.photos,
     required this.steps,
+    required this.waterMl,
+    required this.waterGoal,
   });
 
   double? get weightTrendKgPerWeek {
@@ -797,6 +818,138 @@ class _StepsCard extends StatelessWidget {
           ],
         ),
       );
+}
+
+// ---------------------------------------------------------------- water
+
+class _WaterCard extends StatelessWidget {
+  final _DashData data;
+  final String dateStr;
+  final VoidCallback onChanged;
+  const _WaterCard(
+      {required this.data, required this.dateStr, required this.onChanged});
+
+  Future<void> _add(BuildContext context, int ml) async {
+    await Db.addWater(dateStr, ml);
+    AppState.instance.refresh();
+    onChanged();
+  }
+
+  Future<void> _editGoal(BuildContext context) async {
+    final controller =
+        TextEditingController(text: data.waterGoal.toString());
+    final goal = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: MtTheme.surface,
+        title: const Text('Daily water goal', style: TextStyle(fontSize: 17)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(),
+          decoration: const InputDecoration(labelText: 'Goal (ml)'),
+          onSubmitted: (v) => Navigator.pop(ctx, int.tryParse(v)),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child:
+                  const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)),
+              child: const Text('Save')),
+        ],
+      ),
+    );
+    if (goal == null || goal <= 0) return;
+    await Db.setSetting('water_goal_ml', '$goal');
+    AppState.instance.refresh();
+    onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ml = data.waterMl;
+    final goal = data.waterGoal;
+    final progress = goal <= 0 ? 0.0 : (ml / goal).clamp(0.0, 1.0);
+    final done = ml >= goal;
+    return MtCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CardHeader('Water', icon: Icons.water_drop_outlined,
+              iconColor: const Color(0xFF5BB8F0),
+              trailing: InkWell(
+                onTap: () => _editGoal(context),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Text('goal ${(goal / 1000).toStringAsFixed(1)} L',
+                      style: const TextStyle(
+                          fontSize: 11, color: MtTheme.textDim)),
+                ),
+              )),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text('${ml >= 1000 ? (ml / 1000).toStringAsFixed(1) : ml}'
+                      '${ml >= 1000 ? ' L' : ' ml'}',
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: MtTheme.text)),
+              const SizedBox(width: 6),
+              Text(done ? '· goal reached' : 'of ${(goal / 1000).toStringAsFixed(1)} L',
+                  style:
+                      const TextStyle(fontSize: 12, color: MtTheme.textDim)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: MtTheme.surfaceHi,
+              valueColor:
+                  const AlwaysStoppedAnimation(Color(0xFF5BB8F0)),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              for (final amount in const [250, 500]) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _add(context, amount),
+                    style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFF5BB8F0)),
+                        foregroundColor: const Color(0xFF5BB8F0),
+                        padding: const EdgeInsets.symmetric(vertical: 8)),
+                    child: Text('+$amount ml'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: OutlinedButton(
+                  onPressed:
+                      ml <= 0 ? null : () => _add(context, -250),
+                  style: OutlinedButton.styleFrom(
+                      side: BorderSide(
+                          color: ml <= 0
+                              ? MtTheme.textDim.withValues(alpha: 0.3)
+                              : MtTheme.textDim),
+                      foregroundColor: MtTheme.textDim,
+                      padding: const EdgeInsets.symmetric(vertical: 8)),
+                  child: const Text('Undo 250'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------- habits
