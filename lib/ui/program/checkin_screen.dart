@@ -19,6 +19,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
   final _weight = TextEditingController();
   String? _error; // inline — snackbars would be hidden on pressed states
   final _notes = TextEditingController();
+  final _goalRate = TextEditingController(); // editable kg/week
   Profile? _profile;
   CheckIn? _last;
   List<LogEntry> _recent = [];
@@ -44,6 +45,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
       _recent = recent;
       _weights = weights;
       _loaded = true;
+      _goalRate.text = _fmtRate(profile?.goalRateKgPerWeek ?? 0);
     });
   }
 
@@ -51,7 +53,27 @@ class _CheckInScreenState extends State<CheckInScreen> {
   void dispose() {
     _weight.dispose();
     _notes.dispose();
+    _goalRate.dispose();
     super.dispose();
+  }
+
+  static String _fmtRate(double r) => r.toStringAsFixed(2);
+
+  /// The goal rate currently shown in the editor (parsed live so the target
+  /// preview updates as the user types). Empty/invalid → profile value.
+  double get _effectiveGoalRate {
+    final p = _profile;
+    final parsed =
+        double.tryParse(_goalRate.text.trim().replaceAll(',', '.'));
+    if (parsed == null || p == null) return p?.goalRateKgPerWeek ?? 0;
+    return parsed.clamp(-1.5, 1.5);
+  }
+
+  /// 14-day weight trend in kg/week, or null without enough data.
+  double? get _trendKgPerWeek {
+    final slope =
+        ExpenditureEngine.weightSlopeKgPerDay(_weights, 14);
+    return slope == null ? null : slope * 7;
   }
 
   double? get _exp {
@@ -65,7 +87,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
     final p = _profile;
     final e = _exp;
     if (p == null || e == null) return null;
-    return ExpenditureEngine.dailyTarget(e, p.goalRateKgPerWeek);
+    return ExpenditureEngine.dailyTarget(e, _effectiveGoalRate);
   }
 
   double? get _kcalAvg7 {
@@ -90,8 +112,20 @@ class _CheckInScreenState extends State<CheckInScreen> {
     }
     if (w != null) await Db.upsertWeight(WeightEntry(date: fmtDate(now), weightKg: w));
     final exp = _exp ?? p.initialTdee;
-    final target =
-        _newTarget ?? ExpenditureEngine.dailyTarget(exp, p.goalRateKgPerWeek);
+    final rate = _effectiveGoalRate;
+    // Persist an edited goal rate so the new program persists beyond this
+    // check-in (empty field = keep the current rate).
+    if (rate != p.goalRateKgPerWeek) {
+      await Db.saveProfile(Profile(
+        name: p.name, sex: p.sex, birthYear: p.birthYear,
+        heightCm: p.heightCm, startWeightKg: p.startWeightKg,
+        goalWeightKg: p.goalWeightKg,
+        goalRateKgPerWeek: rate,
+        activityFactor: p.activityFactor, dietStyle: p.dietStyle,
+        checkinWeekday: p.checkinWeekday, programType: p.programType,
+      ));
+    }
+    final target = _newTarget ?? ExpenditureEngine.dailyTarget(exp, rate);
     await Db.insertCheckIn(CheckIn(
       date: fmtDate(now),
       weekStart: fmtDate(weekStart(now)),
@@ -176,8 +210,20 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   'Expenditure ${exp.round()} kcal ${target < exp ? '−' : '+'} ${(target - exp).abs().round()} kcal for your goal.',
                   style: const TextStyle(color: MtTheme.textDim, fontSize: 13),
                 ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _goalRate,
+                keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true, signed: true),
+                onChanged: (_) => setState(() {}), // live target preview
+                decoration: const InputDecoration(
+                  labelText: 'Goal rate (kg/week)',
+                  helperText: 'Negative = lose. Empty keeps the current rate.',
+                ),
+              ),
             ],
           )),
+          _coachCard(),
           _card('Notes', child: TextField(
             controller: _notes,
             maxLines: 3,
@@ -194,6 +240,34 @@ class _CheckInScreenState extends State<CheckInScreen> {
         ],
       ),
     );
+  }
+
+  /// Coaching advice: compares the 14-day weight trend against the goal
+  /// rate and flags divergence (MacroFactor-style check-in coaching).
+  Widget _coachCard() {
+    final trend = _trendKgPerWeek;
+    final goal = _effectiveGoalRate;
+    if (trend == null) return const SizedBox.shrink();
+    String msg;
+    if (goal < -0.05 && trend > goal + 0.1) {
+      msg = 'Your 14-day trend is ${trend.toStringAsFixed(2)} kg/wk — '
+          'losing slower than your ${goal.toStringAsFixed(2)} kg/wk goal. '
+          'Either lower the goal rate or keep logging precisely; your '
+          'expenditure estimate will adapt.';
+    } else if (goal > 0.05 && trend < goal - 0.1) {
+      msg = 'Your 14-day trend is ${trend.toStringAsFixed(2)} kg/wk — '
+          'gaining slower than your ${goal.toStringAsFixed(2)} kg/wk goal. '
+          'Consider lowering the goal rate if this keeps up.';
+    } else if (goal < -0.05 && trend < goal - 0.25) {
+      msg = 'Your 14-day trend is ${trend.toStringAsFixed(2)} kg/wk — '
+          'losing faster than intended. A higher goal rate (slower loss) '
+          'protects muscle; adjust the goal rate above if this continues.';
+    } else {
+      msg = 'On track: 14-day trend ${trend.toStringAsFixed(2)} kg/wk vs '
+          'goal ${goal.toStringAsFixed(2)} kg/wk.';
+    }
+    return _card('Coach', child: Text(msg,
+        style: const TextStyle(fontSize: 13, color: MtTheme.text)));
   }
 
   Widget _card(String title, {required Widget child, bool accent = false}) =>
