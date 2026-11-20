@@ -130,6 +130,21 @@ jobs:
             printf 'keyPassword=%s\n' "$ANDROID_KEY_PASSWORD"
           } > android/key.properties
 
+      - name: Validate keystore and password (fail fast, masked)
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          keytool -list -v -keystore android/app/macrotrack-release.jks \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" -storetype PKCS12 2>/dev/null \
+            || keytool -list -v -keystore android/app/macrotrack-release.jks \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" -storetype JKS 2>/dev/null \
+            || { echo "::error::Keystore or ANDROID_KEYSTORE_PASSWORD mismatch — decode + keytool above failed. Verify the base64 and the store password (not the key password) against 'keytool -list -keystore <file>'."; exit 1; }
+          keytool -list -v -keystore android/app/macrotrack-release.jks \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" 2>/dev/null | grep -q "Alias name: $ANDROID_KEY_ALIAS" \
+            || echo "::warning::Alias '$ANDROID_KEY_ALIAS' not found in keystore — check ANDROID_KEY_ALIAS."
+
       - run: flutter pub get
 
       # AAB for Play, APK for direct GitHub download. The build number is the
