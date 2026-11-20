@@ -6,6 +6,7 @@ import '../../app_state.dart';
 import '../../db.dart';
 import '../../main.dart' show applyThemeMode;
 import '../../services/food_updates.dart';
+import '../../services/notifications.dart';
 import '../../theme.dart';
 import 'ai_settings.dart';
 import 'data_export.dart';
@@ -77,6 +78,7 @@ class MoreScreen extends StatelessWidget {
           ),
           const _SectionLabel('Settings'),
           const _ThemeTile(),
+          const _RemindersTile(),
           ListTile(
             leading: Icon(Icons.smart_toy, color: MtTheme.accent),
             title: const Text('AI settings'),
@@ -227,6 +229,91 @@ class _ThemeTile extends StatelessWidget {
       trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
       onTap: () => _pick(context),
     );
+  }
+}
+
+/// Reminder toggles: daily log reminder (user-picked time) and weekly
+/// check-in reminder on the program's check-in weekday.
+class _RemindersTile extends StatefulWidget {
+  const _RemindersTile();
+  @override
+  State<_RemindersTile> createState() => _RemindersTileState();
+}
+
+class _RemindersTileState extends State<_RemindersTile> {
+  bool? _daily;
+  TimeOfDay _dailyTime = const TimeOfDay(hour: 20, minute: 0);
+  bool? _weekly;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final daily = await Db.getSetting('reminder_daily');
+    final timeStr = await Db.getSetting('reminder_daily_time');
+    final weekly = await Db.getSetting('reminder_weekly');
+    if (!mounted) return;
+    final parts = (timeStr ?? '20:0').split(':');
+    setState(() {
+      _daily = daily == '1';
+      _weekly = weekly == '1';
+      if (parts.length == 2) {
+        _dailyTime = TimeOfDay(
+            hour: int.tryParse(parts[0]) ?? 20,
+            minute: int.tryParse(parts[1]) ?? 0);
+      }
+    });
+  }
+
+  Future<void> _setDaily(bool value) async {
+    var hour = _dailyTime.hour;
+    var minute = _dailyTime.minute;
+    if (value) {
+      final picked = await showTimePicker(
+          context: context, initialTime: _dailyTime);
+      if (picked == null) return;
+      hour = picked.hour;
+      minute = picked.minute;
+      if (mounted) setState(() => _dailyTime = picked);
+    }
+    await Notifications.setDailyReminder(
+        enabled: value, hour: hour, minute: minute);
+    if (!mounted) return;
+    setState(() => _daily = value);
+  }
+
+  Future<void> _setWeekly(bool value) async {
+    final profile = await Db.loadProfile();
+    await Notifications.setWeeklyReminder(
+        enabled: value, weekday: profile?.checkinWeekday ?? 1);
+    if (!mounted) return;
+    setState(() => _weekly = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(children: [
+      SwitchListTile(
+        secondary:
+            Icon(Icons.notifications_active, color: MtTheme.accent),
+        title: const Text('Daily log reminder'),
+        subtitle: Text(_daily == true
+            ? 'Every day at ${_dailyTime.format(context)}'
+            : 'Off'),
+        value: _daily ?? false,
+        onChanged: (v) => _setDaily(v),
+      ),
+      SwitchListTile(
+        secondary: Icon(Icons.event_repeat, color: MtTheme.accent),
+        title: const Text('Weekly check-in reminder'),
+        subtitle: const Text('On your check-in weekday at 09:00'),
+        value: _weekly ?? false,
+        onChanged: (v) => _setWeekly(v),
+      ),
+    ]);
   }
 }
 

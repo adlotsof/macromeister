@@ -32,6 +32,7 @@ dependencies:
   http: ^1.2.0
   file_picker: ^13.4.0
   excel: ^4.0.0
+  flutter_local_notifications: 19.2.1
 
 dev_dependencies:
   flutter_test:
