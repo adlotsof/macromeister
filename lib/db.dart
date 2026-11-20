@@ -6,8 +6,9 @@ import 'package:flutter/services.dart' show MethodChannel;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
-import 'models.dart';
 import 'micros.dart';
+import 'models.dart';
+import 'services/health_sync.dart' show hcSync, HealthSync;
 
 class Db {
   static Database? _db;
@@ -329,18 +330,25 @@ class Db {
   }
 
   // ---- log entries ----
-  static Future<int> insertLog(LogEntry e) async =>
-      (await instance).insert('log_entries', e.toMap());
+  static Future<int> insertLog(LogEntry e) async {
+    final id = await (await instance).insert('log_entries', e.toMap());
+    hcSync(() => HealthSync.writeMealFromEntry(
+        LogEntry.fromMap({...e.toMap(), 'id': id})));
+    return id;
+  }
 
   static Future<void> updateLog(LogEntry e) async {
     if (e.id == null) return;
     final m = e.toMap()..remove('id');
     await (await instance)
         .update('log_entries', m, where: 'id = ?', whereArgs: [e.id]);
+    hcSync(() => HealthSync.writeMealFromEntry(e));
   }
 
-  static Future<void> deleteLog(int id) async =>
-      (await instance).delete('log_entries', where: 'id = ?', whereArgs: [id]);
+  static Future<void> deleteLog(int id) async {
+    await (await instance).delete('log_entries', where: 'id = ?', whereArgs: [id]);
+    hcSync(() => HealthSync.deleteMealForEntry(id));
+  }
 
   static Future<List<LogEntry>> logsForDay(String date) async {
     final rows = await (await instance)
@@ -498,6 +506,7 @@ class Db {
     final newMl = (await waterMl(date) + ml).clamp(0, 10000);
     await db.insert('hydration', {'date': date, 'ml': newMl},
         conflictAlgorithm: ConflictAlgorithm.replace);
+    hcSync(() => HealthSync.writeWater(DateTime.parse(date), newMl));
     return newMl;
   }
 
@@ -512,6 +521,7 @@ class Db {
     await (await instance).insert('hydration',
         {'date': date, 'ml': ml.clamp(0, 10000)},
         conflictAlgorithm: ConflictAlgorithm.replace);
+    hcSync(() => HealthSync.writeWater(DateTime.parse(date), ml));
   }
 
   // ---- micronutrient targets ----
