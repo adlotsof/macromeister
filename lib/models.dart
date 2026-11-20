@@ -1,12 +1,15 @@
 // Data models for MacroTrack. Plain classes with manual JSON maps.
 import 'dart:convert';
 
+import 'micros.dart';
+
 class Food {
   final int? id;
   final String name;
   final String brand;
   final double servingG; // per-serving size in grams
   final double kcal, protein, carbs, fat, fiber; // per 100 g
+  final Map<String, double> micros; // per 100 g; keys = Micros ids
   final String source; // custom | off | ai
   final String? offId;
   final String? createdAt;
@@ -21,6 +24,7 @@ class Food {
     required this.carbs,
     required this.fat,
     this.fiber = 0,
+    this.micros = const {},
     this.source = 'custom',
     this.offId,
     this.createdAt,
@@ -32,6 +36,7 @@ class Food {
   double carbsFor(double grams) => carbs * grams / 100;
   double fatFor(double grams) => fat * grams / 100;
   double fiberFor(double grams) => fiber * grams / 100;
+  Map<String, double> microsFor(double grams) => Micros.scale(micros, grams);
 
   Map<String, Object?> toMap() => {
         'id': id,
@@ -43,6 +48,7 @@ class Food {
         'carbs': carbs,
         'fat': fat,
         'fiber': fiber,
+        'micros': micros.isEmpty ? null : Micros.encode(micros),
         'source': source,
         'off_id': offId,
         'created_at': createdAt,
@@ -58,6 +64,7 @@ class Food {
         carbs: (m['carbs'] as num?)?.toDouble() ?? 0,
         fat: (m['fat'] as num?)?.toDouble() ?? 0,
         fiber: (m['fiber'] as num?)?.toDouble() ?? 0,
+        micros: Micros.decode(m['micros'] as String?),
         source: (m['source'] ?? 'custom') as String,
         offId: m['off_id'] as String?,
         createdAt: m['created_at'] as String?,
@@ -73,6 +80,7 @@ class LogEntry {
   final String brand;
   final double grams;
   final double kcal, protein, carbs, fat, fiber; // absolute for this entry
+  final Map<String, double> micros; // absolute for this entry; keys = Micros ids
   final bool fasted; // zero-calorie day marker support
   final String? createdAt;
 
@@ -89,6 +97,7 @@ class LogEntry {
     required this.carbs,
     required this.fat,
     this.fiber = 0,
+    this.micros = const {},
     this.fasted = false,
     this.createdAt,
   });
@@ -106,6 +115,7 @@ class LogEntry {
         'carbs': carbs,
         'fat': fat,
         'fiber': fiber,
+        'micros': micros.isEmpty ? null : Micros.encode(micros),
         'fasted': fasted ? 1 : 0,
         'created_at': createdAt,
       };
@@ -123,6 +133,7 @@ class LogEntry {
         carbs: (m['carbs'] as num?)?.toDouble() ?? 0,
         fat: (m['fat'] as num?)?.toDouble() ?? 0,
         fiber: (m['fiber'] as num?)?.toDouble() ?? 0,
+        micros: Micros.decode(m['micros'] as String?),
         fasted: (m['fasted'] as int? ?? 0) == 1,
         createdAt: m['created_at'] as String?,
       );

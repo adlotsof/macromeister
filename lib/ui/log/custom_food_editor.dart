@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../app_state.dart';
 import '../../db.dart';
+import '../../micros.dart';
 import '../../models.dart';
 import '../../services/camera_permission.dart';
 import '../../services/openai.dart';
@@ -36,6 +37,10 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
   late final TextEditingController _fat;
   late final TextEditingController _fiber;
   final _aiDesc = TextEditingController();
+  // Per-100 g micronutrient editors; keys are Micros ids. Only nutrients the
+  // user actually fills get persisted.
+  final Map<String, TextEditingController> _micros = {};
+  bool _microsExpanded = false;
   bool _aiLoading = false;
   bool _deleting = false;
   String? _error; // inline error — snackbars hide behind the modal barrier
@@ -52,6 +57,11 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
     _carbs = TextEditingController(text: _numStr(f?.carbs ?? 0));
     _fat = TextEditingController(text: _numStr(f?.fat ?? 0));
     _fiber = TextEditingController(text: _numStr(f?.fiber ?? 0));
+    for (final def in Micros.all) {
+      final v = f?.micros[def.id];
+      _micros[def.id] =
+          TextEditingController(text: v == null ? '' : _numStr(v));
+    }
   }
 
   @override
@@ -59,6 +69,9 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
     for (final c in [
       _name, _brand, _serving, _kcal, _protein, _carbs, _fat, _fiber, _aiDesc
     ]) {
+      c.dispose();
+    }
+    for (final c in _micros.values) {
       c.dispose();
     }
     super.dispose();
@@ -180,8 +193,24 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
       _carbs.text = _numStr(food.carbs);
       _fat.text = _numStr(food.fat);
       _fiber.text = _numStr(food.fiber);
+      if (food.micros.isNotEmpty) {
+        for (final def in Micros.all) {
+          final v = food.micros[def.id];
+          _micros[def.id]?.text = v == null ? '' : _numStr(v);
+        }
+        _microsExpanded = true; // show what the AI filled
+      }
     });
   }
+
+  /// Collects the micronutrient controllers into a clean map. Empty fields
+  /// are treated as "not tracked" (not zero) so we don't store junk.
+  Map<String, double> _collectMicros() => {
+        for (final e in _micros.entries)
+          if (e.value.text.trim().isNotEmpty &&
+              (double.tryParse(e.value.text.replaceAll(',', '.')) ?? -1) >= 0)
+            e.key: double.parse(e.value.text.replaceAll(',', '.')),
+      };
 
   Future<void> _save({required bool alsoLog}) async {
     final name = _name.text.trim();
@@ -190,6 +219,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
       return;
     }
     final serving = _val(_serving) <= 0 ? 100.0 : _val(_serving);
+    final micros = _collectMicros();
     final food = Food(
       id: widget.existing?.id,
       name: name,
@@ -200,6 +230,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
       carbs: _val(_carbs),
       fat: _val(_fat),
       fiber: _val(_fiber),
+      micros: micros,
       source: 'custom',
       offId: widget.existing?.offId,
       createdAt: widget.existing?.createdAt,
@@ -219,6 +250,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
         carbs: food.carbs * g / 100,
         fat: food.fat * g / 100,
         fiber: food.fiber * g / 100,
+        micros: food.microsFor(g),
       ));
     }
     AppState.instance.refresh();
@@ -342,6 +374,37 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
                 labelText: 'Fiber (optional)', suffixText: 'g')),
+        const SizedBox(height: 12),
+        // Micronutrients: collapsible so the main form stays fast to use.
+        ExpansionTile(
+          tilePadding: EdgeInsets.zero,
+          initiallyExpanded: _microsExpanded,
+          onExpansionChanged: (v) => setState(() => _microsExpanded = v),
+          title: const Text('Micronutrients per 100 g (optional)',
+              style: TextStyle(fontSize: 13, color: MtTheme.textDim)),
+          children: [
+            for (var i = 0; i < Micros.all.length; i += 2)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(children: [
+                  for (var j = i;
+                      j < i + 2 && j < Micros.all.length;
+                      j++) ...[
+                    if (j > i) const SizedBox(width: 10),
+                    Expanded(
+                        child: TextField(
+                      controller: _micros[Micros.all[j].id],
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                          labelText: Micros.all[j].label,
+                          suffixText: Micros.all[j].unit),
+                    )),
+                  ],
+                ]),
+              ),
+          ],
+        ),
         const SizedBox(height: 20),
         FilledButton.icon(
           onPressed: () => _save(alsoLog: true),

@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
 import 'models.dart';
+import 'micros.dart';
 
 class Db {
   static Database? _db;
@@ -81,7 +82,7 @@ class Db {
     rankExprs.add('CASE WHEN name LIKE ? THEN 0 ELSE 1 END');
     rankArgs.add('${tokens.last}%');
     return db.rawQuery('''
-      SELECT code, name, brand, country, serving_g, kcal, protein, carbs, fat, fiber
+      SELECT code, name, brand, country, serving_g, kcal, protein, carbs, fat, fiber, micros
       FROM foods
       WHERE ${wheres.join(' AND ')}
       ORDER BY ${rankExprs.join(', ')}, LENGTH(name)
@@ -98,6 +99,7 @@ class Db {
         carbs: (r['carbs'] as num?)?.toDouble() ?? 0,
         fat: (r['fat'] as num?)?.toDouble() ?? 0,
         fiber: (r['fiber'] as num?)?.toDouble() ?? 0,
+        micros: Micros.decode(r['micros'] as String?),
         source: source,
         offId: (r['code'] ?? '') as String,
       );
@@ -188,7 +190,7 @@ class Db {
     final dir = await getDatabasesPath();
     final db = await openDatabase(
         p.join(dir, dbPathOverride ?? 'macrotrack.db'),
-        version: 3,
+        version: 4,
         onUpgrade: (db, from, to) async {
       if (from < 2) {
         // MacroFactor body-metrics import carries body-fat %; add the column.
@@ -198,6 +200,11 @@ class Db {
       if (from < 3) {
         await db.execute(
             'CREATE TABLE IF NOT EXISTS hydration(date TEXT PRIMARY KEY, ml INTEGER)');
+      }
+      if (from < 4) {
+        // Micronutrients stored as JSON blobs (see lib/micros.dart).
+        await db.execute('ALTER TABLE foods ADD COLUMN micros TEXT');
+        await db.execute('ALTER TABLE log_entries ADD COLUMN micros TEXT');
       }
     },
         onCreate: (db, v) async {
@@ -212,14 +219,14 @@ class Db {
         CREATE TABLE foods(
           id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, brand TEXT,
           serving_g REAL, kcal REAL, protein REAL, carbs REAL, fat REAL,
-          fiber REAL, source TEXT, off_id TEXT, created_at TEXT
+          fiber REAL, micros TEXT, source TEXT, off_id TEXT, created_at TEXT
         )''');
       await db.execute('CREATE UNIQUE INDEX foods_off ON foods(off_id) WHERE off_id IS NOT NULL');
       await db.execute('''
         CREATE TABLE log_entries(
           id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, meal TEXT,
           food_id INTEGER, name TEXT, brand TEXT, grams REAL, kcal REAL,
-          protein REAL, carbs REAL, fat REAL, fiber REAL,
+          protein REAL, carbs REAL, fat REAL, fiber REAL, micros TEXT,
           fasted INTEGER DEFAULT 0, created_at TEXT
         )''');
       await db.execute(
@@ -506,6 +513,16 @@ class Db {
         {'date': date, 'ml': ml.clamp(0, 10000)},
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
+
+  // ---- micronutrient targets ----
+  /// User-configured micronutrient targets (id -> amount/day), stored in the
+  /// settings table as JSON. Missing ids fall back to [Micros.all] defaults
+  /// at the call site.
+  static Future<Map<String, double>> microTargets() async =>
+      Micros.decode(await getSetting('micro_targets'));
+
+  static Future<void> setMicroTargets(Map<String, double> targets) =>
+      setSetting('micro_targets', Micros.encode(targets));
 
   // ---- settings ----
   static Future<String?> getSetting(String key) async {

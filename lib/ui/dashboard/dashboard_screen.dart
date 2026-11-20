@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../app_state.dart';
 import '../../db.dart';
+import '../../micros.dart';
 import '../../models.dart';
 import '../../services/health_sync.dart';
 import '../../services/expenditure.dart';
@@ -47,6 +48,7 @@ class _DashboardViewState extends State<_DashboardView> {
     'show_body_metrics',
     'show_energy_balance',
     'show_water',
+    'show_micros',
   ];
 
   Future<_DashData>? _future;
@@ -144,6 +146,19 @@ class _DashboardViewState extends State<_DashboardView> {
       waterGoal =
           int.tryParse(await Db.getSetting('water_goal_ml') ?? '') ?? 3000;
     }
+    // Micronutrient intake for the selected day + user targets (defaults for
+    // untracked ids). Only nutrients the user targets are shown.
+    Map<String, double> microsEaten = {};
+    Map<String, double> microTargets = {};
+    if (settings['show_micros']!) {
+      final logs = await Db.logsForDay(dateStr);
+      microsEaten = Micros.sum(logs.map((l) => l.micros));
+      final stored = await Db.microTargets();
+      microTargets = {
+        for (final def in Micros.all)
+          def.id: stored[def.id] ?? def.defaultTarget,
+      };
+    }
 
     return _DashData(
       settings: settings,
@@ -160,6 +175,8 @@ class _DashboardViewState extends State<_DashboardView> {
       steps: steps,
       waterMl: waterMl,
       waterGoal: waterGoal,
+      microsEaten: microsEaten,
+      microTargets: microTargets,
     );
   }
 
@@ -205,6 +222,10 @@ class _DashboardViewState extends State<_DashboardView> {
                   const SizedBox(height: 12),
                   _MacroCard(data: data),
                   const SizedBox(height: 12),
+                  if (data.settings['show_micros']!) ...[
+                    _MicrosCard(data: data),
+                    const SizedBox(height: 12),
+                  ],
                   _WeekChartCard(data: data, dateStr: fmtDate(widget.date)),
                   if (data.settings['show_energy_balance']!) ...[
                     const SizedBox(height: 12),
@@ -302,6 +323,8 @@ class _DashData {
   final int steps;
   final int waterMl;
   final int waterGoal;
+  final Map<String, double> microsEaten;
+  final Map<String, double> microTargets;
   _DashData({
     required this.settings,
     required this.totals,
@@ -317,6 +340,8 @@ class _DashData {
     required this.steps,
     required this.waterMl,
     required this.waterGoal,
+    required this.microsEaten,
+    required this.microTargets,
   });
 
   double? get weightTrendKgPerWeek {
@@ -471,6 +496,137 @@ class _MacroCard extends StatelessWidget {
           ],
         ),
       );
+}
+
+// ---------------------------------------------------------------- micros
+
+/// Micronutrient intake vs. daily targets for the selected day. Bars render
+/// for every tracked nutrient (defaults unless customized), matching the
+/// MacroFactor micronutrient summary. Tap the header to edit targets.
+class _MicrosCard extends StatelessWidget {
+  final _DashData data;
+  const _MicrosCard({required this.data});
+
+  Future<void> _editTargets(BuildContext context) async {
+    final stored = await Db.microTargets();
+    final controllers = {
+      for (final def in Micros.all)
+        def.id: TextEditingController(
+            text: stored.containsKey(def.id)
+                ? _fmt(stored[def.id]!)
+                : ''), // empty = use default
+    };
+    if (!context.mounted) return;
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: MtTheme.surface,
+        title: const Text('Micronutrient targets', style: TextStyle(fontSize: 17)),
+        content: SizedBox(
+          width: 320,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const Text(
+                'Empty = default target. Values are per day.',
+                style: TextStyle(fontSize: 12, color: MtTheme.textDim),
+              ),
+              const SizedBox(height: 10),
+              for (final def in Micros.all)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: TextField(
+                    controller: controllers[def.id],
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: '${def.label} (default ${_fmt(def.defaultTarget)})',
+                      suffixText: def.unit,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child:
+                  const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Save')),
+        ],
+      ),
+    );
+    if (saved != true) {
+      for (final c in controllers.values) {
+        c.dispose();
+      }
+      return;
+    }
+    // Persist only the customized ids; empty strings revert to defaults.
+    final targets = <String, double>{};
+    for (final def in Micros.all) {
+      final t = controllers[def.id]!.text.trim();
+      if (t.isEmpty) continue;
+      final v = double.tryParse(t.replaceAll(',', '.'));
+      if (v != null && v > 0) targets[def.id] = v;
+    }
+    for (final c in controllers.values) {
+      c.dispose();
+    }
+    await Db.setMicroTargets(targets);
+    AppState.instance.refresh();
+  }
+
+  static String _fmt(double v) =>
+      v == v.roundToDouble() ? v.round().toString() : v.toStringAsFixed(1);
+
+  @override
+  Widget build(BuildContext context) {
+    final eaten = data.microsEaten;
+    return MtCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CardHeader('Micronutrients',
+              icon: Icons.medication_liquid,
+              trailing: InkWell(
+                onTap: () => _editTargets(context),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Text('edit targets',
+                      style:
+                          TextStyle(fontSize: 11, color: MtTheme.textDim)),
+                ),
+              )),
+          const SizedBox(height: 12),
+          if (eaten.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                'Log foods with micronutrient data (custom foods → '
+                'Micronutrients per 100 g) to see intake here.',
+                style: TextStyle(fontSize: 12, color: MtTheme.textDim),
+              ),
+            )
+          else
+            for (final def in Micros.all)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: MacroBar(
+                  label: def.label,
+                  value: eaten[def.id] ?? 0,
+                  target: data.microTargets[def.id] ?? def.defaultTarget,
+                  color: MtTheme.accentAlt,
+                  unit: def.unit,
+                ),
+              ),
+        ],
+      ),
+    );
+  }
 }
 
 // ---------------------------------------------------------------- week chart

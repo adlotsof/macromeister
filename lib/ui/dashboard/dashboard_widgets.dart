@@ -115,15 +115,17 @@ class _RingPainter extends CustomPainter {
 /// Horizontal macro progress bar with label and value.
 class MacroBar extends StatelessWidget {
   final String label;
-  final double value; // grams consumed
-  final double target; // grams target
+  final double value; // consumed
+  final double target; // target
   final Color color;
+  final String unit; // display unit (g, mg, µg, ...)
   const MacroBar({
     super.key,
     required this.label,
     required this.value,
     required this.target,
     required this.color,
+    this.unit = 'g',
   });
 
   @override
@@ -137,7 +139,7 @@ class MacroBar extends StatelessWidget {
             Text(label,
                 style: const TextStyle(fontSize: 12, color: MtTheme.textDim)),
             const Spacer(),
-            Text('${value.round()} / ${target.round()} g',
+            Text('${value.round()} / ${target.round()} $unit',
                 style: const TextStyle(
                     fontSize: 12, color: MtTheme.text, fontWeight: FontWeight.w500)),
           ],
