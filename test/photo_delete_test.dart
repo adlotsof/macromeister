@@ -6,6 +6,7 @@
 // real sqflite futures never complete inside the widget-test FakeAsync zone.
 import 'dart:io';
 
+// ignore: deprecated_member_use -- same convention as the other tests
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:macrotrack/db.dart';

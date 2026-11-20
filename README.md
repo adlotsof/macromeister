@@ -41,6 +41,36 @@ flutter build apk --release
 # output: build/app/outputs/flutter-apk/app-release.apk
 ```
 
+## Releases
+
+- **Tag → GitHub Release + Play internal track.** Pushing a tag `v*` runs
+  `.github/workflows/release.yml`: it builds a signed AAB + APK, attaches the
+  APK to a GitHub Release and uploads the AAB to the Google Play **internal**
+  track.
+- **Semi-annual maintenance release.** `.github/workflows/maintenance-release.yml`
+  runs on Jan 1 and Jul 1 (Google Play deactivates accounts without an app
+  update for ~6 months): it bumps the build number, commits + tags, which
+  triggers the release workflow, and uploads the bundle to the internal track.
+  Run it on demand via *workflow_dispatch*.
+- **Signing.** Release signing uses `android/key.properties` + a keystore,
+  both gitignored. Locally, drop them into place; on CI they are injected
+  from secrets (see below). Without them the build falls back to the debug
+  key.
+
+### Required GitHub secrets (Settings → Secrets and variables → Actions)
+
+| Secret | Meaning |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | base64 of the release keystore (`base64 -i macrotrack-release.jks`) |
+| `ANDROID_KEYSTORE_PASSWORD` | keystore store password |
+| `ANDROID_KEY_ALIAS` | key alias |
+| `ANDROID_KEY_PASSWORD` | key password |
+| `PLAY_SERVICE_ACCOUNT_JSON` | Play Console service-account JSON (Play API access enabled for the internal track) |
+
+Secrets are never committed; the workflows read them at run time. If the
+Play service-account secret is missing, the Play upload step is skipped and
+only the GitHub Release is created.
+
 ## Data sources & licenses
 
 - **Open Food Facts** (bundled `foods_off.db`) — ODbL 1.0: attribution and
