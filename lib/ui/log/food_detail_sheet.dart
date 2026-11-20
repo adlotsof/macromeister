@@ -133,7 +133,7 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
                       overflow: TextOverflow.ellipsis),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: MtTheme.textDim),
+                  icon: Icon(Icons.close, color: MtTheme.textDim),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -142,7 +142,7 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(f.brand,
-                    style: const TextStyle(color: MtTheme.textDim, fontSize: 13)),
+                    style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
               ),
             const SizedBox(height: 8),
             // Macro summary for the entered amount
@@ -182,7 +182,7 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
                   OutlinedButton(
                     onPressed: () => _grams.text = _gStr(f.servingG),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: MtTheme.accentAlt),
+                      side: BorderSide(color: MtTheme.accentAlt),
                       foregroundColor: MtTheme.accentAlt,
                     ),
                     child: Text('1 srv (${_gStr(f.servingG)}g)'),
@@ -254,7 +254,7 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
                   fontWeight: FontWeight.w700,
                   color: big ? MtTheme.accent : MtTheme.text)),
           Text(label,
-              style: const TextStyle(fontSize: 11, color: MtTheme.textDim)),
+              style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
         ],
       );
 }

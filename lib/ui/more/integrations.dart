@@ -32,7 +32,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
       setState(() => _working = false);
       await Db.setSetting('hc_connected', '0');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: MtTheme.danger,
           content: Text(
@@ -71,7 +71,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.monitor_heart_outlined,
+                      Icon(Icons.monitor_heart_outlined,
                           color: MtTheme.accent),
                       const SizedBox(width: 10),
                       const Expanded(
@@ -80,7 +80,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
                                 fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
                       if (_connected)
-                        const Chip(
+                        Chip(
                           label: Text('Connected'),
                           backgroundColor: MtTheme.surfaceHi,
                           labelStyle: TextStyle(
@@ -89,7 +89,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Reads steps and body weight, and writes weigh-ins back '
                     'to Health Connect. Requires the Health Connect app on '
                     'this Android device.',
@@ -112,7 +112,7 @@ class _IntegrationsScreenState extends State<IntegrationsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               'Apple Health, Fitbit and Google Fit are not supported in this '

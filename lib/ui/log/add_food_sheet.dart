@@ -79,7 +79,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                   ),
                   _mealSelector(),
                   IconButton(
-                    icon: const Icon(Icons.close, color: MtTheme.textDim),
+                    icon: Icon(Icons.close, color: MtTheme.textDim),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -105,7 +105,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                 ),
               ),
             ),
-            const Divider(height: 1, color: MtTheme.surfaceHi),
+            Divider(height: 1, color: MtTheme.surfaceHi),
             Expanded(
               child: switch (_tab) {
                 _Tab.search => _SearchTab(date: widget.date, meal: _meal),
@@ -135,9 +135,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(_cap(_meal),
-                  style: const TextStyle(
+                  style: TextStyle(
                       color: MtTheme.accent, fontWeight: FontWeight.w600)),
-              const Icon(Icons.arrow_drop_down, color: MtTheme.accent),
+              Icon(Icons.arrow_drop_down, color: MtTheme.accent),
             ],
           ),
         ),
@@ -262,11 +262,11 @@ class _SearchTabState extends State<_SearchTab> {
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration(
                     hintText: 'Search foods…',
-                    prefixIcon: const Icon(Icons.search, color: MtTheme.textDim),
+                    prefixIcon: Icon(Icons.search, color: MtTheme.textDim),
                     suffixIcon: _controller.text.isEmpty
                         ? null
                         : IconButton(
-                            icon: const Icon(Icons.clear, size: 18, color: MtTheme.textDim),
+                            icon: Icon(Icons.clear, size: 18, color: MtTheme.textDim),
                             onPressed: () {
                               _controller.clear();
                               _search('');
@@ -316,14 +316,14 @@ class _SearchTabState extends State<_SearchTab> {
                   const _SectionLabel('Yesterday'),
                   for (final l in recentNames.values.take(6))
                     ListTile(
-                      leading: const Icon(Icons.history, color: MtTheme.textDim),
+                      leading: Icon(Icons.history, color: MtTheme.textDim),
                       title: Text(l.name, maxLines: 1, overflow: TextOverflow.ellipsis),
                       subtitle: l.brand.isEmpty
                           ? null
                           : Text(l.brand, maxLines: 1, overflow: TextOverflow.ellipsis),
                       trailing: Text(
                           '${l.kcal.round()} kcal · ${_fmtG(l.grams)}g',
-                          style: const TextStyle(color: MtTheme.textDim, fontSize: 12)),
+                          style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
                       onTap: () {
                         // Zero-gram entries (quick add / fasted / recipes)
                         // store totals directly — dividing by grams would
@@ -358,14 +358,14 @@ class _SearchTabState extends State<_SearchTab> {
                   const _SectionLabel('My foods'),
                   for (final f in custom.take(10))
                     ListTile(
-                      leading: const Icon(Icons.edit_note, color: MtTheme.accentAlt),
+                      leading: Icon(Icons.edit_note, color: MtTheme.accentAlt),
                       title: Text(f.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: const Text('Long-press to edit',
+                      subtitle: Text('Long-press to edit',
                           style:
                               TextStyle(color: MtTheme.textDim, fontSize: 11)),
                       trailing: Text(
                           f.kcal > 0 ? '${f.kcal.round()} kcal/100g' : '—',
-                          style: const TextStyle(color: MtTheme.textDim, fontSize: 12)),
+                          style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
                       onTap: () => openFoodDetailSheet(context, f,
                           date: widget.date, meal: widget.meal),
                       onLongPress: () {
@@ -429,7 +429,7 @@ class _SearchTabState extends State<_SearchTab> {
           for (final f in _off)
             _foodTile(f, highlight: f.brand),
         ] else if (_scanned && localShown.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.all(32),
             child: Center(
                 child: Text('No results. Try the AI describe tab instead.',
@@ -447,9 +447,9 @@ class _SearchTabState extends State<_SearchTab> {
               : '$highlight · ${f.kcal.round()} kcal/100g',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(color: MtTheme.textDim, fontSize: 12),
+          style: TextStyle(color: MtTheme.textDim, fontSize: 12),
         ),
-        trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+        trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
         onTap: () => openFoodDetailSheet(context, f, date: widget.date, meal: widget.meal),
       );
 
@@ -509,7 +509,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: Text(text.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 11,
                 letterSpacing: 1.1,
                 color: MtTheme.textDim,
@@ -700,7 +700,7 @@ class _AiTabState extends State<_AiTab> {
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(_error!,
-              style: const TextStyle(color: MtTheme.danger, fontSize: 12)),
+              style: TextStyle(color: MtTheme.danger, fontSize: 12)),
         ],
         const SizedBox(height: 16),
         for (final g in _guesses) _guessTile(g),
@@ -734,7 +734,7 @@ class _AiTabState extends State<_AiTab> {
         subtitle: Text(
           '${_fmtG(g.grams)}g · ${kcal.round()} kcal · P${(g.protein * g.grams / 100).round()} '
           'C${(g.carbs * g.grams / 100).round()} F${(g.fat * g.grams / 100).round()}',
-          style: const TextStyle(color: MtTheme.textDim, fontSize: 12),
+          style: TextStyle(color: MtTheme.textDim, fontSize: 12),
         ),
         leading: Icon(Icons.circle, size: 10, color: confColor),
         trailing: Row(
@@ -742,7 +742,7 @@ class _AiTabState extends State<_AiTab> {
           children: [
             IconButton(
               tooltip: 'Adjust',
-              icon: const Icon(Icons.tune, size: 20, color: MtTheme.textDim),
+              icon: Icon(Icons.tune, size: 20, color: MtTheme.textDim),
               onPressed: () async {
                 final food = Food(
                   name: g.name,
@@ -760,7 +760,7 @@ class _AiTabState extends State<_AiTab> {
             ),
             IconButton(
               tooltip: 'Log',
-              icon: const Icon(Icons.add_circle, color: MtTheme.accent),
+              icon: Icon(Icons.add_circle, color: MtTheme.accent),
               onPressed: () async {
                 await _logGuess(g);
                 AppState.instance.refresh();
@@ -863,7 +863,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(_error!,
-              style: const TextStyle(color: MtTheme.danger, fontSize: 12)),
+              style: TextStyle(color: MtTheme.danger, fontSize: 12)),
         ],
         const SizedBox(height: 12),
         FilledButton.icon(
@@ -1003,9 +1003,9 @@ class _RecipeTabState extends State<_RecipeTab> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.menu_book, size: 40, color: MtTheme.textDim),
+            Icon(Icons.menu_book, size: 40, color: MtTheme.textDim),
             const SizedBox(height: 12),
-            const Text(
+            Text(
                 'No saved recipes yet. Create one from paste or AI import on the More → Recipes screen, or paste a recipe below.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: MtTheme.textDim)),
@@ -1028,8 +1028,8 @@ class _RecipeTabState extends State<_RecipeTab> {
             title: Text(r.name, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle: Text(
                 '${r.servings} servings · ${r.kcal.round()} kcal · P${r.protein.round()} C${r.carbs.round()} F${r.fat.round()} per serving',
-                style: const TextStyle(color: MtTheme.textDim, fontSize: 12)),
-            trailing: const Icon(Icons.add_circle, color: MtTheme.accent),
+                style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+            trailing: Icon(Icons.add_circle, color: MtTheme.accent),
             onTap: () => _logRecipe(r),
           ),
       ],

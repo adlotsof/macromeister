@@ -47,7 +47,7 @@ class _LogBody extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: MtTheme.textDim),
+                    icon: Icon(Icons.chevron_left, color: MtTheme.textDim),
                     onPressed: () =>
                         app.selectedDate = selected.subtract(const Duration(days: 1)),
                   ),
@@ -64,14 +64,14 @@ class _LogBody extends StatelessWidget {
                                 fontSize: 17, fontWeight: FontWeight.w700),
                           ),
                           Text(dateStr,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 12, color: MtTheme.textDim)),
                         ],
                       ),
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert, color: MtTheme.textDim),
+                    icon: Icon(Icons.more_vert, color: MtTheme.textDim),
                     tooltip: 'Meal actions',
                     onSelected: (v) {
                       if (v == 'yesterday') {
@@ -242,9 +242,9 @@ class _TotalsCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_labelFor(color),
-                    style: const TextStyle(fontSize: 11, color: MtTheme.textDim)),
+                    style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
                 Text('${value.round()}${target > 0 ? '/${target.round()}' : ''}g',
-                    style: const TextStyle(fontSize: 11, color: MtTheme.textDim)),
+                    style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
               ],
             ),
             const SizedBox(height: 3),
@@ -279,11 +279,11 @@ class _TotalsCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${totals.kcal.round()}',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
                             color: MtTheme.accent)),
-                    const Text('kcal eaten',
+                    Text('kcal eaten',
                         style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
                   ],
                 ),
@@ -302,7 +302,7 @@ class _TotalsCard extends StatelessWidget {
                     ),
                     if (target > 0)
                       Text('target ${target.round()} kcal',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 11, color: MtTheme.textDim)),
                   ],
                 ),
@@ -361,12 +361,12 @@ class _MealSection extends StatelessWidget {
                   const SizedBox(width: 8),
                   if (logs.isNotEmpty)
                     Text('${kcal.round()} kcal',
-                        style: const TextStyle(
+                        style: TextStyle(
                             fontSize: 12, color: MtTheme.textDim)),
                   const Spacer(),
                   IconButton(
                     tooltip: 'Add to $_label',
-                    icon: const Icon(Icons.add_circle_outline,
+                    icon: Icon(Icons.add_circle_outline,
                         size: 22, color: MtTheme.accent),
                     onPressed: () =>
                         showAddFoodSheet(context, date: date, meal: meal),
@@ -417,7 +417,7 @@ class _EntryTile extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: MtTheme.danger,
           borderRadius: BorderRadius.horizontal(left: Radius.circular(16)),
         ),
@@ -463,7 +463,7 @@ class _EntryTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text('${entry.kcal.round()} kcal',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: MtTheme.accent)),
@@ -475,7 +475,7 @@ class _EntryTile extends StatelessWidget {
               : '${entry.brand.isEmpty ? '' : '${entry.brand} · '}$macroStr',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12, color: MtTheme.textDim),
+          style: TextStyle(fontSize: 12, color: MtTheme.textDim),
         ),
       ),
     );

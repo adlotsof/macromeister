@@ -201,7 +201,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Estimates from current data',
+                  Text('Estimates from current data',
                       style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
                   const SizedBox(height: 10),
                   _row('Starting TDEE estimate',
@@ -233,7 +233,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
                   if (_customMacros) ...[
                     Text('Target $_macroTargetKcal kcal/day',
                         style:
-                            const TextStyle(color: MtTheme.textDim, fontSize: 12)),
+                            TextStyle(color: MtTheme.textDim, fontSize: 12)),
                     const SizedBox(height: 10),
                     Row(children: [
                       Expanded(
@@ -273,7 +273,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
                       return Text(
                           'Carbs auto: ${carbs.round()} g/day  ·  '
                           'P${(pg * 4).round()} F${(fg * 9).round()} C${(carbs * 4).round()} kcal',
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: MtTheme.textDim, fontSize: 12));
                     }),
                   ],
@@ -287,7 +287,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
           _labeled('Starting weight (kg)', TextField(controller: _weight, keyboardType: const TextInputType.numberWithOptions(decimal: true))),
           _labeled('Goal weight (kg)', TextField(controller: _goalWeight, keyboardType: const TextInputType.numberWithOptions(decimal: true))),
           _labeled('Goal rate (kg/week, negative = losing)', TextField(controller: _goalRate, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), onChanged: (_) => _saveGoalParams())),
-          const Text('Activity level',
+          Text('Activity level',
               style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
           Slider(
             value: (_profile?.activityFactor ?? 1.4).clamp(1.2, 1.9),
@@ -306,7 +306,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
           _labeled('Birth year', TextField(controller: _birthYear, keyboardType: TextInputType.number)),
           _labeled('Diet style', TextField(controller: _dietStyle)),
           const SizedBox(height: 8),
-          const Text('Weekly check-in day',
+          Text('Weekly check-in day',
               style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
           const SizedBox(height: 6),
           Wrap(
@@ -325,7 +325,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
             }),
           ),
           const SizedBox(height: 10),
-          const Text('Coaching style',
+          Text('Coaching style',
               style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
           const SizedBox(height: 6),
           SegmentedButton<String>(
@@ -350,7 +350,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: MtTheme.textDim, fontSize: 13)),
+            Text(label, style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
             const SizedBox(height: 6),
             field,
           ],
@@ -362,8 +362,8 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(color: MtTheme.textDim)),
-            Text(value, style: const TextStyle(color: MtTheme.text)),
+            Text(label, style: TextStyle(color: MtTheme.textDim)),
+            Text(value, style: TextStyle(color: MtTheme.text)),
           ],
         ),
       );

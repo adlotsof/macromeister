@@ -119,12 +119,12 @@ class _ProgramScreenState extends State<ProgramScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.flag_outlined, size: 64, color: MtTheme.textDim),
+              Icon(Icons.flag_outlined, size: 64, color: MtTheme.textDim),
               const SizedBox(height: 16),
               const Text('No program yet',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Answer a few questions and get a personalized calorie & macro program.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: MtTheme.textDim),
@@ -158,14 +158,14 @@ class _ProgramScreenState extends State<ProgramScreen> {
               : p.goalRateKgPerWeek > 0.05
                   ? 'Gaining ${p.goalRateKgPerWeek.toStringAsFixed(2)} kg/week'
                   : 'Maintaining weight',
-          style: const TextStyle(color: MtTheme.textDim),
+          style: TextStyle(color: MtTheme.textDim),
         ),
         if (days != null)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(
               'Goal weight ${p.goalWeightKg.toStringAsFixed(1)} kg · $days',
-              style: const TextStyle(color: MtTheme.textDim, fontSize: 13),
+              style: TextStyle(color: MtTheme.textDim, fontSize: 13),
             ),
           ),
       ],
@@ -207,7 +207,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
                       color: MtTheme.accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text('Coached',
+                    child: Text('Coached',
                         style: TextStyle(color: MtTheme.accent, fontSize: 11)),
                   ),
               ],
@@ -239,7 +239,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-                style: const TextStyle(color: MtTheme.textDim, fontSize: 12)),
+                style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
             Text(value,
                 style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.bold)),
@@ -254,7 +254,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
             Row(children: [
               Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
               const SizedBox(width: 6),
-              Text(label, style: const TextStyle(color: MtTheme.textDim, fontSize: 12)),
+              Text(label, style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
             ]),
             Text('${grams.round()} g',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -284,7 +284,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
               dueToday
                   ? 'Weigh in and update your targets.'
                   : '${_weekdayName(p.checkinWeekday)}, ${fmtDate(next)}',
-              style: const TextStyle(color: MtTheme.textDim, fontSize: 13),
+              style: TextStyle(color: MtTheme.textDim, fontSize: 13),
             ),
             const SizedBox(height: 12),
             SizedBox(
@@ -332,8 +332,8 @@ class _ProgramScreenState extends State<ProgramScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(color: MtTheme.textDim)),
-            Text(value, style: const TextStyle(color: MtTheme.text)),
+            Text(label, style: TextStyle(color: MtTheme.textDim)),
+            Text(value, style: TextStyle(color: MtTheme.text)),
           ],
         ),
       );
@@ -353,7 +353,7 @@ class _ProgramScreenState extends State<ProgramScreen> {
               if (c.notes.isNotEmpty)
                 Text(c.notes,
                     style:
-                        const TextStyle(color: MtTheme.textDim, fontSize: 12),
+                        TextStyle(color: MtTheme.textDim, fontSize: 12),
                     maxLines: 2, overflow: TextOverflow.ellipsis),
             ],
           ),

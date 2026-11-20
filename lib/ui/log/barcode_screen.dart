@@ -98,10 +98,10 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.no_photography,
+                    Icon(Icons.no_photography,
                         size: 40, color: MtTheme.textDim),
                     const SizedBox(height: 12),
-                    const Text(
+                    Text(
                         'Camera unavailable. Check the camera permission in system settings.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: MtTheme.textDim)),
@@ -140,7 +140,7 @@ class _BarcodeScreenState extends State<BarcodeScreen> {
                 child: Text(
                   _status ?? 'Point the camera at a product barcode',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: MtTheme.text),
+                  style: TextStyle(color: MtTheme.text),
                 ),
               ),
             ),

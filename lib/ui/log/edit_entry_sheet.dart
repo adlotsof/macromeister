@@ -145,7 +145,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
           const SizedBox(height: 4),
           Text('Logged in ${_cap(e.meal)} · ${e.date}',
               style:
-                  const TextStyle(color: MtTheme.textDim, fontSize: 12)),
+                  TextStyle(color: MtTheme.textDim, fontSize: 12)),
           const SizedBox(height: 12),
           if (e.grams > 0) ...[
             TextField(
@@ -201,7 +201,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
           if (_error != null) ...[
             const SizedBox(height: 8),
             Text(_error!,
-                style: const TextStyle(color: MtTheme.danger, fontSize: 12)),
+                style: TextStyle(color: MtTheme.danger, fontSize: 12)),
           ],
           const SizedBox(height: 14),
           Row(children: [

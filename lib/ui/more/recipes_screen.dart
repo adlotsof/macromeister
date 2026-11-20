@@ -79,7 +79,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
     final recipe = await AiBridge.parseRecipeViaKey(text);
     if (!mounted) return;
     if (recipe == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('AI could not parse that recipe'),
           backgroundColor: MtTheme.danger));
       return;
@@ -145,7 +145,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
         ],
       ),
       body: _recipes.isEmpty
-          ? const Center(
+          ? Center(
               child: Text('No recipes yet.\nUse + to build one or ✨ to import.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: MtTheme.textDim)))
@@ -171,7 +171,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                             ),
                             IconButton(
                                 onPressed: () => _openEditor(r),
-                                icon: const Icon(Icons.edit_outlined,
+                                icon: Icon(Icons.edit_outlined,
                                     size: 20, color: MtTheme.textDim)),
                             IconButton(
                                 onPressed: () async {
@@ -198,7 +198,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                                   await Db.deleteRecipe(r.id!);
                                   _reload();
                                 },
-                                icon: const Icon(Icons.delete_outline,
+                                icon: Icon(Icons.delete_outline,
                                     size: 20, color: MtTheme.danger)),
                           ],
                         ),
@@ -209,7 +209,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                           'C ${r.carbs.toStringAsFixed(1)}g · '
                           'F ${r.fat.toStringAsFixed(1)}g per serving '
                           '(${r.servings} servings)',
-                          style: const TextStyle(
+                          style: TextStyle(
                               color: MtTheme.textDim, fontSize: 13),
                         ),
                         const SizedBox(height: 10),

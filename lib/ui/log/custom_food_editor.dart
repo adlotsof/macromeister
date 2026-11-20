@@ -269,7 +269,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
                 color: MtTheme.danger.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8)),
             child: Text(_error!,
-                style: const TextStyle(color: MtTheme.danger, fontSize: 13)),
+                style: TextStyle(color: MtTheme.danger, fontSize: 13)),
           ),
           const SizedBox(height: 10),
         ],
@@ -284,7 +284,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
         OutlinedButton.icon(
           onPressed: _aiLoading ? null : _aiFill,
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: MtTheme.accentAlt),
+            side: BorderSide(color: MtTheme.accentAlt),
             foregroundColor: MtTheme.accentAlt,
           ),
           icon: _aiLoading
@@ -313,7 +313,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
         const SizedBox(height: 4),
         Text('Photo of the nutrition label — fills name and macros per 100 g.',
             style: TextStyle(color: MtTheme.textDim, fontSize: 11)),
-        const Divider(height: 32, color: MtTheme.surfaceHi),
+        Divider(height: 32, color: MtTheme.surfaceHi),
         TextField(
             controller: _name,
             textCapitalization: TextCapitalization.words,
@@ -380,7 +380,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
           tilePadding: EdgeInsets.zero,
           initiallyExpanded: _microsExpanded,
           onExpansionChanged: (v) => setState(() => _microsExpanded = v),
-          title: const Text('Micronutrients per 100 g (optional)',
+          title: Text('Micronutrients per 100 g (optional)',
               style: TextStyle(fontSize: 13, color: MtTheme.textDim)),
           children: [
             for (var i = 0; i < Micros.all.length; i += 2)

@@ -126,10 +126,10 @@ class _HabitsScreenState extends State<HabitsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.track_changes,
+                      Icon(Icons.track_changes,
                           size: 40, color: MtTheme.textDim),
                       const SizedBox(height: 12),
-                      const Text('No habits yet. Tap + to create one — '
+                      Text('No habits yet. Tap + to create one — '
                           'build streaks for logging and weigh-ins.',
                           textAlign: TextAlign.center,
                           style: TextStyle(color: MtTheme.textDim)),
@@ -159,7 +159,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
                             ),
                             IconButton(
                               tooltip: 'Delete',
-                              icon: const Icon(Icons.delete_outline,
+                              icon: Icon(Icons.delete_outline,
                                   color: MtTheme.textDim),
                               onPressed: () => _delete(h),
                             ),

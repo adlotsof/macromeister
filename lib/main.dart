@@ -23,12 +23,38 @@ class MacroTrackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MacroTrack',
-      debugShowCheckedModeBanner: false,
-      theme: MtTheme.theme(),
-      home: const _AppRoot(),
+    return AnimatedBuilder(
+      animation: AppState.instance,
+      builder: (context, _) => MaterialApp(
+        title: 'MacroTrack',
+        debugShowCheckedModeBanner: false,
+        theme: MtTheme.theme(),
+        home: const _AppRoot(),
+      ),
     );
+  }
+}
+
+/// Reads the persisted theme mode ('system' | 'light' | 'dark') and applies
+/// it to the palette. Returns true when the palette CHANGED — the caller
+/// then repaints (AppState.refresh()); false means stable, no repaint.
+Future<bool> applyThemeMode() async {
+  try {
+    final mode = await Db.getSetting('theme_mode') ?? 'dark';
+  final Brightness b;
+  switch (mode) {
+    case 'light':
+      b = Brightness.light;
+      break;
+    case 'system':
+      b = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+      break;
+    default:
+      b = Brightness.dark;
+  }
+    return MtTheme.apply(b);
+  } catch (_) {
+    return false; // no DB yet (tests) — keep the current palette
   }
 }
 
@@ -48,19 +74,27 @@ class _AppRoot extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: AppState.instance,
-      builder: (context, _) => FutureBuilder<bool>(
-        future: _onboardingDone(),
-        builder: (context, snap) {
-          if (!snap.hasData) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          return snap.data == true
-              ? const _HomeWithUpdates()
-              : const OnboardingScreen();
-        },
-      ),
+      builder: (context, _) {
+        // Re-apply the persisted theme mode on every root rebuild; a mode
+        // change (More → Theme) flips the palette and triggers exactly one
+        // repaint via the change signal below.
+        applyThemeMode().then((changed) {
+          if (changed) AppState.instance.refresh();
+        });
+        return FutureBuilder<bool>(
+          future: _onboardingDone(),
+          builder: (context, snap) {
+            if (!snap.hasData) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
+            return snap.data == true
+                ? const _HomeWithUpdates()
+                : const OnboardingScreen();
+          },
+        );
+      },
     );
   }
 }

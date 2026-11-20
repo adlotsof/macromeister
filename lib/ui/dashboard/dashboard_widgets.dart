@@ -37,7 +37,7 @@ class CardHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(title,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: MtTheme.textDim,
@@ -55,14 +55,14 @@ class RingProgress extends StatelessWidget {
   final double strokeWidth;
   final Color color;
   final Widget child;
-  const RingProgress({
+  RingProgress({
     super.key,
     required this.progress,
     required this.child,
     this.size = 168,
     this.strokeWidth = 14,
-    this.color = MtTheme.accent,
-  });
+    Color? color,
+  }) : color = color ?? MtTheme.accent;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -137,10 +137,10 @@ class MacroBar extends StatelessWidget {
         Row(
           children: [
             Text(label,
-                style: const TextStyle(fontSize: 12, color: MtTheme.textDim)),
+                style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
             const Spacer(),
             Text('${value.round()} / ${target.round()} $unit',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 12, color: MtTheme.text, fontWeight: FontWeight.w500)),
           ],
         ),
@@ -193,19 +193,19 @@ class StatTile extends StatelessWidget {
                 child: Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, color: MtTheme.textDim)),
+                    style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
               ),
             ]),
             const SizedBox(height: 8),
             Text(value,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 18, fontWeight: FontWeight.w700, color: MtTheme.text)),
             if (sub != null) ...[
               const SizedBox(height: 2),
               Text(sub!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: MtTheme.textDim)),
+                  style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
             ],
           ],
         ),

@@ -167,7 +167,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                   color: MtTheme.danger.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8)),
               child: Text(_error!,
-                  style: const TextStyle(color: MtTheme.danger, fontSize: 13)),
+                  style: TextStyle(color: MtTheme.danger, fontSize: 13)),
             ),
             const SizedBox(height: 10),
           ],
@@ -186,7 +186,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text('Optional — but keeps your trend accurate.',
+              Text('Optional — but keeps your trend accurate.',
                   style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
             ],
           )),
@@ -202,13 +202,13 @@ class _CheckInScreenState extends State<CheckInScreen> {
             children: [
               Text(
                 target == null ? '—' : '${target.round()} kcal/day',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 32, fontWeight: FontWeight.bold, color: MtTheme.accent),
               ),
               if (exp != null && target != null)
                 Text(
                   'Expenditure ${exp.round()} kcal ${target < exp ? '−' : '+'} ${(target - exp).abs().round()} kcal for your goal.',
-                  style: const TextStyle(color: MtTheme.textDim, fontSize: 13),
+                  style: TextStyle(color: MtTheme.textDim, fontSize: 13),
                 ),
               const SizedBox(height: 12),
               TextField(
@@ -267,7 +267,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
           'goal ${goal.toStringAsFixed(2)} kg/wk.';
     }
     return _card('Coach', child: Text(msg,
-        style: const TextStyle(fontSize: 13, color: MtTheme.text)));
+        style: TextStyle(fontSize: 13, color: MtTheme.text)));
   }
 
   Widget _card(String title, {required Widget child, bool accent = false}) =>
@@ -296,8 +296,8 @@ class _CheckInScreenState extends State<CheckInScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(color: MtTheme.textDim)),
-            Text(value, style: const TextStyle(color: MtTheme.text)),
+            Text(label, style: TextStyle(color: MtTheme.textDim)),
+            Text(value, style: TextStyle(color: MtTheme.text)),
           ],
         ),
       );

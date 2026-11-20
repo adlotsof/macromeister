@@ -173,11 +173,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(t, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: MtTheme.text)),
+            Text(t, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: MtTheme.text)),
             if (sub != null)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text(sub, style: const TextStyle(color: MtTheme.textDim, fontSize: 14)),
+                child: Text(sub, style: TextStyle(color: MtTheme.textDim, fontSize: 14)),
               ),
           ],
         ),
@@ -238,7 +238,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 20),
           Text('Weekly rate: ${_goalRate.toStringAsFixed(2)} kg/week',
-              style: const TextStyle(color: MtTheme.text)),
+              style: TextStyle(color: MtTheme.text)),
           Slider(
             value: _goalRate,
             min: -1.0,
@@ -250,9 +250,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Lose', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
-              const Text('Maintain', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
-              const Text('Gain', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+              Text('Lose', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+              Text('Maintain', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+              Text('Gain', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
             ],
           ),
         ],
@@ -279,7 +279,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         value: a.$2,
                         title: Text(a.$1),
                         subtitle: Text('×${a.$2.toStringAsFixed(1)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                                 color: MtTheme.textDim, fontSize: 12)),
                         activeColor: MtTheme.accent,
                       ))
@@ -299,7 +299,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 labelText: 'Diet style (e.g. high protein, vegetarian)'),
           ),
           const SizedBox(height: 18),
-          const Text('Weekly check-in day', style: TextStyle(color: MtTheme.textDim)),
+          Text('Weekly check-in day', style: TextStyle(color: MtTheme.textDim)),
           Wrap(
             spacing: 8,
             children: List.generate(7, (i) {
@@ -313,7 +313,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             }),
           ),
           const SizedBox(height: 18),
-          const Text('Coaching style', style: TextStyle(color: MtTheme.textDim)),
+          Text('Coaching style', style: TextStyle(color: MtTheme.textDim)),
           SegmentedButton<String>(
             segments: const [
               ButtonSegment(value: 'coached', label: Text('Coached')),

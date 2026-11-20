@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
 import '../../db.dart';
+import '../../main.dart' show applyThemeMode;
 import '../../services/food_updates.dart';
 import '../../theme.dart';
 import 'ai_settings.dart';
@@ -25,69 +26,70 @@ class MoreScreen extends StatelessWidget {
         children: [
           const _SectionLabel('Track'),
           ListTile(
-            leading: const Icon(Icons.restaurant_menu, color: MtTheme.accent),
+            leading: Icon(Icons.restaurant_menu, color: MtTheme.accent),
             title: const Text('Recipes'),
             subtitle: const Text('Saved recipes and AI recipe import'),
-            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const RecipesScreen())),
           ),
           ListTile(
-            leading: const Icon(Icons.track_changes, color: MtTheme.accent),
+            leading: Icon(Icons.track_changes, color: MtTheme.accent),
             title: const Text('Habits'),
             subtitle: const Text('Create habits and build streaks'),
-            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const HabitsScreen())),
           ),
           const _SectionLabel('Data'),
           _AutoBackupTile(),
           ListTile(
-            leading: const Icon(Icons.ios_share, color: MtTheme.accent),
+            leading: Icon(Icons.ios_share, color: MtTheme.accent),
             title: const Text('Export data'),
             subtitle: const Text('CSV exports via share sheet'),
-            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const DataExportScreen())),
           ),
           ListTile(
-            leading: const Icon(Icons.visibility, color: MtTheme.accent),
+            leading: Icon(Icons.visibility, color: MtTheme.accent),
             title: const Text('Data visibility'),
             subtitle: const Text('Show or hide dashboard cards'),
-            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const DataVisibilityScreen())),
           ),
           const _FoodDbTile(),
           ListTile(
-            leading: const Icon(Icons.dangerous, color: MtTheme.danger),
-            title: const Text('Clear food log', style: TextStyle(color: MtTheme.danger)),
+            leading: Icon(Icons.dangerous, color: MtTheme.danger),
+            title: Text('Clear food log', style: TextStyle(color: MtTheme.danger)),
             subtitle: const Text('Delete all logged entries'),
             onTap: () => _confirmClearLogs(context),
           ),
           const _SectionLabel('Settings'),
+          const _ThemeTile(),
           ListTile(
-            leading: const Icon(Icons.smart_toy, color: MtTheme.accent),
+            leading: Icon(Icons.smart_toy, color: MtTheme.accent),
             title: const Text('AI settings'),
             subtitle: const Text('OpenAI key and connection test'),
-            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const AiSettingsScreen())),
           ),
           ListTile(
-            leading: const Icon(Icons.watch, color: MtTheme.accentAlt),
+            leading: Icon(Icons.watch, color: MtTheme.accentAlt),
             title: const Text('Integrations'),
             subtitle: const Text('Health Connect (steps, weight)'),
-            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const IntegrationsScreen())),
           ),
           const SizedBox(height: 12),
           ListTile(
-            leading: const Icon(Icons.menu_book, color: MtTheme.textDim),
+            leading: Icon(Icons.menu_book, color: MtTheme.textDim),
             title: const Text('Data sources & licenses'),
             subtitle: const Text('Open Food Facts (ODbL), USDA FoodData Central (CC0)'),
-            trailing: const Icon(Icons.chevron_right, color: MtTheme.textDim),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const DataSourcesScreen())),
           ),
@@ -159,11 +161,62 @@ class _AutoBackupTileState extends State<_AutoBackupTile> {
   Widget build(BuildContext context) {
     return SwitchListTile(
       secondary:
-          const Icon(Icons.backup_outlined, color: MtTheme.accent),
+          Icon(Icons.backup_outlined, color: MtTheme.accent),
       title: const Text('Daily auto-backup'),
       subtitle: const Text('Keeps the last 7 backups on this device'),
       value: _enabled ?? true,
       onChanged: (v) => _set(v),
+    );
+  }
+}
+
+/// Theme mode selector: system / light / dark, persisted in settings.
+class _ThemeTile extends StatelessWidget {
+  const _ThemeTile();
+
+  Future<void> _pick(BuildContext context) async {
+    final current = await Db.getSetting('theme_mode') ?? 'dark';
+    if (!context.mounted) return;
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (value, label, icon) in const [
+              ('system', 'Follow system', Icons.brightness_auto),
+              ('light', 'Light', Icons.light_mode),
+              ('dark', 'Dark', Icons.dark_mode),
+            ])
+              ListTile(
+                leading: Icon(icon,
+                    color: current == value
+                        ? MtTheme.accent
+                        : MtTheme.textDim),
+                title: Text(label),
+                trailing: current == value
+                    ? Icon(Icons.check, color: MtTheme.accent)
+                    : null,
+                onTap: () => Navigator.pop(ctx, value),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || picked == current) return;
+    await Db.setSetting('theme_mode', picked);
+    // Repaint the whole app with the new palette.
+    if (await applyThemeMode()) AppState.instance.refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(Icons.palette_outlined, color: MtTheme.accent),
+      title: Text('Theme'),
+      subtitle: Text('Light, dark, or follow system'),
+      trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
+      onTap: () => _pick(context),
     );
   }
 }
@@ -222,7 +275,7 @@ class _FoodDbTileState extends State<_FoodDbTile> {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        leading: const Icon(Icons.cloud_download, color: MtTheme.accent),
+        leading: Icon(Icons.cloud_download, color: MtTheme.accent),
         title: const Text('Update food database'),
         subtitle: Text(_subtitle ?? 'Checking…'),
         trailing: _updating
@@ -230,7 +283,7 @@ class _FoodDbTileState extends State<_FoodDbTile> {
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2))
-            : const Icon(Icons.refresh, color: MtTheme.textDim),
+            : Icon(Icons.refresh, color: MtTheme.textDim),
         onTap: _updating ? null : _update,
       );
 }
@@ -242,7 +295,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
         child: Text(text.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
                 color: MtTheme.textDim,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

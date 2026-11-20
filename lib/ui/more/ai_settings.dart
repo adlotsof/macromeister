@@ -86,7 +86,7 @@ class _AiSettingsScreenState extends State<AiSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
+          Text(
             'Your API key powers AI meal parsing, recipe import and custom '
             'food creation. It is stored on this device only and sent solely '
             'to the chosen provider (openrouter.ai or api.openai.com).',

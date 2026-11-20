@@ -68,7 +68,7 @@ class _DataVisibilityScreenState extends State<DataVisibilityScreen> {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(4, 4, 4, 8),
             child: Text(
                 'Choose which optional cards appear on the dashboard.',
@@ -81,7 +81,7 @@ class _DataVisibilityScreenState extends State<DataVisibilityScreen> {
                 secondary: Icon(item.icon, color: MtTheme.accent),
                 title: Text(item.title),
                 subtitle: Text(item.subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                         color: MtTheme.textDim, fontSize: 12)),
                 value: _values[item.key] ?? true,
                 onChanged: (v) => _toggle(item.key, v),

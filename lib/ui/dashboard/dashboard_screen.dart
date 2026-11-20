@@ -209,7 +209,7 @@ class _DashboardViewState extends State<_DashboardView> {
               children: [
                 _buildDateHeader(context, selected, isToday),
                 if (snap.connectionState != ConnectionState.done && data == null)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.all(48),
                     child: Center(
                         child: CircularProgressIndicator(color: MtTheme.accent)),
@@ -284,7 +284,7 @@ class _DashboardViewState extends State<_DashboardView> {
       children: [
         IconButton(
           onPressed: () => _shiftDate(-1),
-          icon: const Icon(Icons.chevron_left, color: MtTheme.textDim),
+          icon: Icon(Icons.chevron_left, color: MtTheme.textDim),
         ),
         Expanded(
           child: Column(
@@ -293,11 +293,11 @@ class _DashboardViewState extends State<_DashboardView> {
                 isToday
                     ? 'Today'
                     : '${weekdayNames[selected.weekday - 1]}, ${monthNames[selected.month - 1]} ${selected.day}',
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 18, fontWeight: FontWeight.w700, color: MtTheme.text),
               ),
               if (!isToday && fmtDate(selected) == fmtDate(today().subtract(const Duration(days: 1))))
-                const Text('Yesterday',
+                Text('Yesterday',
                     style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
             ],
           ),
@@ -400,7 +400,7 @@ class _EnergyCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         color: over ? MtTheme.accentAlt : MtTheme.text)),
                 Text(over ? 'kcal over' : 'kcal left',
-                    style: const TextStyle(fontSize: 12, color: MtTheme.textDim)),
+                    style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
               ],
             ),
           ),
@@ -419,7 +419,7 @@ class _EnergyCard extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: MtTheme.accent),
+                  side: BorderSide(color: MtTheme.accent),
                   foregroundColor: MtTheme.accent,
                 ),
                 onPressed: () => _markFasted(context),
@@ -437,7 +437,7 @@ class _EnergyCard extends StatelessWidget {
           Text(value,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color)),
           const SizedBox(height: 2),
-          Text(label, style: const TextStyle(fontSize: 11, color: MtTheme.textDim)),
+          Text(label, style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
         ],
       );
 
@@ -531,7 +531,7 @@ class _MicrosCard extends StatelessWidget {
           child: ListView(
             shrinkWrap: true,
             children: [
-              const Text(
+              Text(
                 'Empty = default target. Values are per day.',
                 style: TextStyle(fontSize: 12, color: MtTheme.textDim),
               ),
@@ -556,7 +556,7 @@ class _MicrosCard extends StatelessWidget {
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child:
-                  const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+                  Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Save')),
@@ -598,7 +598,7 @@ class _MicrosCard extends StatelessWidget {
               icon: Icons.medication_liquid,
               trailing: InkWell(
                 onTap: () => _editTargets(context),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   child: Text('edit targets',
                       style:
@@ -607,7 +607,7 @@ class _MicrosCard extends StatelessWidget {
               )),
           const SizedBox(height: 12),
           if (eaten.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 6),
               child: Text(
                 'Log foods with micronutrient data (custom foods → '
@@ -664,7 +664,7 @@ class _WeekChartCard extends StatelessWidget {
               const Expanded(
                   child: CardHeader('Last 7 days', icon: Icons.bar_chart)),
               Text('target ${fmtKcal(target)}',
-                  style: const TextStyle(fontSize: 11, color: MtTheme.textDim)),
+                  style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
             ],
           ),
           const SizedBox(height: 18),
@@ -731,7 +731,7 @@ class _WeekChartCard extends StatelessWidget {
                         touchTooltipData: BarTouchTooltipData(
                           getTooltipItem: (group, gi, rod, ri) => BarTooltipItem(
                             '${fmtKcal(rod.toY)} kcal',
-                            const TextStyle(
+                            TextStyle(
                                 color: MtTheme.text, fontSize: 11),
                           ),
                         ),
@@ -741,7 +741,7 @@ class _WeekChartCard extends StatelessWidget {
                 : Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.insights, color: MtTheme.textDim, size: 28),
                         SizedBox(height: 6),
                         Text('Log meals to see your weekly trend',
@@ -797,11 +797,11 @@ class _EnergyBalanceCard extends StatelessWidget {
             Text(
               'Daily net: ${intake - exp >= 0 ? '+' : ''}${fmtKcal(intake - exp)} kcal '
               '(${(intake - exp) >= 0 ? 'surplus' : 'deficit'})',
-              style: const TextStyle(fontSize: 12, color: MtTheme.textDim),
+              style: TextStyle(fontSize: 12, color: MtTheme.textDim),
             ),
           ] else ...[
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Keep logging — a 7-day average appears once you have data.',
               style: TextStyle(fontSize: 12, color: MtTheme.textDim),
             ),
@@ -843,7 +843,7 @@ class _BodyMetricsCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     minimumSize: Size.zero),
                 onPressed: () => _addWeight(context),
-                child: const Text('+ Log weight',
+                child: Text('+ Log weight',
                     style: TextStyle(fontSize: 12, color: MtTheme.accent)),
               )),
           const SizedBox(height: 14),
@@ -880,9 +880,9 @@ class _BodyMetricsCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Goal ${goal.toStringAsFixed(1)} kg',
-                    style: const TextStyle(fontSize: 12, color: MtTheme.textDim)),
+                    style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
                 Text('${progressPct.toStringAsFixed(0)}% of the way',
-                    style: const TextStyle(fontSize: 12, color: MtTheme.accent)),
+                    style: TextStyle(fontSize: 12, color: MtTheme.accent)),
               ],
             ),
             const SizedBox(height: 6),
@@ -892,7 +892,7 @@ class _BodyMetricsCard extends StatelessWidget {
                 value: progressPct / 100,
                 minHeight: 6,
                 backgroundColor: MtTheme.surfaceHi,
-                valueColor: const AlwaysStoppedAnimation(MtTheme.accent),
+                valueColor: AlwaysStoppedAnimation(MtTheme.accent),
               ),
             ),
           ],
@@ -921,7 +921,7 @@ class _BodyMetricsCard extends StatelessWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+              child: Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
           FilledButton(
               onPressed: () => Navigator.pop(
                   ctx, double.tryParse(controller.text.replaceAll(',', '.'))),
@@ -955,25 +955,25 @@ class _StepsCard extends StatelessWidget {
                 color: MtTheme.surfaceHi,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.directions_walk, color: MtTheme.accentAlt),
+              child: Icon(Icons.directions_walk, color: MtTheme.accentAlt),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Steps',
+                  Text('Steps',
                       style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
                   const SizedBox(height: 2),
                   Text('${data.steps}',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 20, fontWeight: FontWeight.w700, color: MtTheme.text)),
                 ],
               ),
             ),
-            const Icon(Icons.watch_outlined, color: MtTheme.textDim, size: 18),
+            Icon(Icons.watch_outlined, color: MtTheme.textDim, size: 18),
             const SizedBox(width: 6),
-            const Text('Health Connect',
+            Text('Health Connect',
                 style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
           ],
         ),
@@ -1014,7 +1014,7 @@ class _WaterCard extends StatelessWidget {
           TextButton(
               onPressed: () => Navigator.pop(ctx),
               child:
-                  const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+                  Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)),
               child: const Text('Save')),
@@ -1044,7 +1044,7 @@ class _WaterCard extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   child: Text('goal ${(goal / 1000).toStringAsFixed(1)} L',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 11, color: MtTheme.textDim)),
                 ),
               )),
@@ -1053,14 +1053,14 @@ class _WaterCard extends StatelessWidget {
             children: [
               Text('${ml >= 1000 ? (ml / 1000).toStringAsFixed(1) : ml}'
                       '${ml >= 1000 ? ' L' : ' ml'}',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: MtTheme.text)),
               const SizedBox(width: 6),
               Text(done ? '· goal reached' : 'of ${(goal / 1000).toStringAsFixed(1)} L',
                   style:
-                      const TextStyle(fontSize: 12, color: MtTheme.textDim)),
+                      TextStyle(fontSize: 12, color: MtTheme.textDim)),
             ],
           ),
           const SizedBox(height: 8),
@@ -1133,10 +1133,10 @@ class _HabitsCard extends StatelessWidget {
               trailing: habits.isEmpty
                   ? null
                   : Text('$doneCount/${habits.length} today',
-                      style: const TextStyle(fontSize: 11, color: MtTheme.textDim))),
+                      style: TextStyle(fontSize: 11, color: MtTheme.textDim))),
           const SizedBox(height: 8),
           if (habits.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 10),
               child: Text('No active habits. Create them in More → Habits.',
                   style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
@@ -1173,10 +1173,10 @@ class _HabitsCard extends StatelessWidget {
                                     : MtTheme.textDim)),
                       ),
                       if (h.type == 'log_food')
-                        const Text('log a meal',
+                        Text('log a meal',
                             style: TextStyle(fontSize: 11, color: MtTheme.textDim))
                       else if (h.type == 'weigh_in')
-                        const Text('weigh in',
+                        Text('weigh in',
                             style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
                     ],
                   ),
@@ -1230,7 +1230,7 @@ class _PeriodCard extends StatelessWidget {
                 ? 'No entries yet. Track flow and symptoms to see patterns.'
                 : 'Last entry ${latest.date.substring(5)} — ${_flowNames[latest.flow.clamp(0, 3)]}'
                   '${cycleInfo == null ? '' : ' · $cycleInfo'}',
-            style: const TextStyle(fontSize: 13, color: MtTheme.textDim),
+            style: TextStyle(fontSize: 13, color: MtTheme.textDim),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -1338,12 +1338,12 @@ class _PhotosCard extends StatelessWidget {
               trailing: IconButton(
                 visualDensity: VisualDensity.compact,
                 onPressed: () => _addPhoto(context),
-                icon: const Icon(Icons.add_a_photo_outlined,
+                icon: Icon(Icons.add_a_photo_outlined,
                     size: 20, color: MtTheme.accent),
               )),
           const SizedBox(height: 8),
           if (photos.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text('No photos yet. Add one to track visual progress.',
                   style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
@@ -1374,7 +1374,7 @@ class _PhotosCard extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, _, _) => Container(
                                       color: MtTheme.surfaceHi,
-                                      child: const Icon(Icons.broken_image_outlined,
+                                      child: Icon(Icons.broken_image_outlined,
                                           color: MtTheme.textDim),
                                     )),
                             Positioned(
@@ -1420,7 +1420,7 @@ class _PhotosCard extends StatelessWidget {
       await Db.insertPhoto(ProgressPhoto(
           date: AppState.instance.selectedDateStr, path: picked.path, weightKg: w));
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: MtTheme.surfaceHi,
           content: Text('Photo added')));
@@ -1428,7 +1428,7 @@ class _PhotosCard extends StatelessWidget {
       onChanged();
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             behavior: SnackBarBehavior.floating,
             backgroundColor: MtTheme.danger,
             content: Text('Could not add photo')));
@@ -1480,7 +1480,7 @@ Future<void> confirmDeletePhoto(
       await _deletePhotoEverywhere(photo);
     }
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
         backgroundColor: MtTheme.surfaceHi,
         content: Text('Photo deleted')));
@@ -1488,7 +1488,7 @@ Future<void> confirmDeletePhoto(
     onChanged();
   } catch (_) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: MtTheme.danger,
           content: Text('Could not delete photo')));
@@ -1617,7 +1617,7 @@ class _FastingCardState extends State<_FastingCard> {
           TextButton(
               onPressed: () => Navigator.pop(ctx),
               child:
-                  const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+                  Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
           FilledButton(
               onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)),
               child: const Text('Save')),
@@ -1651,7 +1651,7 @@ class _FastingCardState extends State<_FastingCard> {
               icon: Icons.hourglass_top,
               trailing: InkWell(
                 onTap: _editGoal,
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   child: Text('goal h',
                       style:
@@ -1665,7 +1665,7 @@ class _FastingCardState extends State<_FastingCard> {
                 elapsed == null
                     ? 'Not fasting'
                     : FastingService.fmtDuration(elapsed),
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: MtTheme.text),
@@ -1675,7 +1675,7 @@ class _FastingCardState extends State<_FastingCard> {
                 elapsed == null
                     ? '· $_goalH_ h presets'
                     : '· ${FastingService.fmtDuration(remaining)} to $_goalH_ h goal',
-                style: const TextStyle(fontSize: 12, color: MtTheme.textDim),
+                style: TextStyle(fontSize: 12, color: MtTheme.textDim),
               ),
             ],
           ),
@@ -1716,7 +1716,7 @@ class _FastingCardState extends State<_FastingCard> {
                 return Text(
                   'Last fast: ${FastingService.fmtDuration(last.end.difference(last.start))} '
                   '(${fmtDate(last.end)})',
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontSize: 11, color: MtTheme.textDim),
                 );
               },
@@ -1755,10 +1755,10 @@ class _CheckInPrompt extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CardHeader('Weekly check-in',
+            CardHeader('Weekly check-in',
                 icon: Icons.event_available, iconColor: MtTheme.accentAlt),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'It\'s check-in day. Confirm your weight to update your program targets.',
               style: TextStyle(fontSize: 13, color: MtTheme.textDim),
             ),
@@ -1792,10 +1792,10 @@ class _CheckInPrompt extends StatelessWidget {
           children: [
             if (data.meanIntake7 != null)
               Text('7-day average intake: ${fmtKcal(data.meanIntake7!)} kcal',
-                  style: const TextStyle(fontSize: 13, color: MtTheme.textDim)),
+                  style: TextStyle(fontSize: 13, color: MtTheme.textDim)),
             Text(
                 'Current expenditure estimate: ${fmtKcal(data.targets.expenditure)} kcal',
-                style: const TextStyle(fontSize: 13, color: MtTheme.textDim)),
+                style: TextStyle(fontSize: 13, color: MtTheme.textDim)),
             const SizedBox(height: 12),
             TextField(
               controller: controller,
@@ -1809,7 +1809,7 @@ class _CheckInPrompt extends StatelessWidget {
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+              child: Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
           FilledButton(
               onPressed: () => Navigator.pop(
                   ctx, double.tryParse(controller.text.replaceAll(',', '.'))),

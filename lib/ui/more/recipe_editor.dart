@@ -149,7 +149,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                       const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(labelText: 'Grams')),
               const SizedBox(height: 8),
-              const Align(
+              Align(
                   alignment: Alignment.centerLeft,
                   child: Text('Macros per 100 g',
                       style: TextStyle(color: MtTheme.textDim, fontSize: 12))),
@@ -258,7 +258,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
                     IconButton(
                         onPressed: () =>
                             setState(() => _ings.removeAt(i)),
-                        icon: const Icon(Icons.delete_outline,
+                        icon: Icon(Icons.delete_outline,
                             size: 20, color: MtTheme.danger)),
                   ],
                 ),
@@ -266,7 +266,7 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
               ),
             ),
           if (_ings.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 8),
               child: Text('No ingredients yet.',
                   style: TextStyle(color: MtTheme.textDim)),

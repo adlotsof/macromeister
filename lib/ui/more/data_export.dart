@@ -234,12 +234,12 @@ class DataExportScreen extends StatelessWidget {
             child: ListTile(
               title: const Text('Full backup',
                   style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text(
+              subtitle: Text(
                   'Everything as one JSON file: profile & goals, height, '
                   'weights, food log, check-ins, habits, recipes, '
                   'period entries and settings.',
                   style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
-              trailing: const Icon(Icons.backup, color: MtTheme.accent),
+              trailing: Icon(Icons.backup, color: MtTheme.accent),
               onTap: () => _exportAll(context),
             ),
           ),
@@ -248,10 +248,10 @@ class DataExportScreen extends StatelessWidget {
             child: ListTile(
               title: const Text('Import backup',
                   style: TextStyle(fontWeight: FontWeight.w700)),
-              subtitle: const Text(
+              subtitle: Text(
                   'Restore from a full-backup JSON file. Replaces current data.',
                   style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
-              trailing: const Icon(Icons.restore, color: MtTheme.accentAlt),
+              trailing: Icon(Icons.restore, color: MtTheme.accentAlt),
               onTap: () => _import(context),
             ),
           ),
@@ -260,12 +260,12 @@ class DataExportScreen extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 16),
             child: ListTile(
               title: const Text('MacroFactor Excel export (.xlsx)'),
-              subtitle: const Text(
+              subtitle: Text(
                   'Imports the full MF export: profile & goals, weights + '
                   'body-fat, custom foods, recipes, daily totals, expenditure '
                   '.',
                   style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
-              trailing: const Icon(Icons.upload_file, color: MtTheme.accent),
+              trailing: Icon(Icons.upload_file, color: MtTheme.accent),
               onTap: () => _importMfXlsx(context),
             ),
           ),
@@ -284,8 +284,8 @@ class DataExportScreen extends StatelessWidget {
                 title: Text(item.$1),
                 subtitle: Text(item.$2,
                     style:
-                        const TextStyle(color: MtTheme.textDim, fontSize: 13)),
-                trailing: const Icon(Icons.ios_share, color: MtTheme.accent),
+                        TextStyle(color: MtTheme.textDim, fontSize: 13)),
+                trailing: Icon(Icons.ios_share, color: MtTheme.accent),
                 onTap: () => _export(context, item.$1, item.$3),
               ),
             ),
@@ -302,7 +302,7 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
         child: Text(text.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 11,
                 letterSpacing: 1.1,
                 color: MtTheme.textDim,

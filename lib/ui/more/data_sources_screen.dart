@@ -42,7 +42,7 @@ class DataSourcesScreen extends StatelessWidget {
               'https://fdc.nal.usda.gov/',
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'This app is not affiliated with or endorsed by Open Food Facts '
               'or the USDA. Application code is a private project.',
               style: TextStyle(color: MtTheme.textDim, fontSize: 12),
@@ -66,7 +66,7 @@ class DataSourcesScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(body, style: const TextStyle(fontSize: 13, height: 1.4)),
             const SizedBox(height: 8),
-            Text(url, style: const TextStyle(color: MtTheme.accent, fontSize: 12)),
+            Text(url, style: TextStyle(color: MtTheme.accent, fontSize: 12)),
           ],
         ),
       );
