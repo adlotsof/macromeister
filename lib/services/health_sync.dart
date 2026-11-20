@@ -7,6 +7,8 @@
 //  - WATER records are in LITERS.
 //  - clientRecordId gives upsert semantics: rewriting the same id replaces
 //    the record, so day totals and edited entries stay drift-free.
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 
@@ -24,9 +26,12 @@ class HealthSync {
     return null;
   }
 
-  /// True when Health Connect (GHC) is usable on this device.
-  static Future<bool> isAvailable() =>
-      _health.isHealthConnectAvailable();
+  /// True when the platform's health store is usable: Health Connect on
+  /// Android, HealthKit (present on every iOS 8+ device) on iOS.
+  static Future<bool> isAvailable() {
+    if (Platform.isIOS) return Future.value(true);
+    return _health.isHealthConnectAvailable();
+  }
 
   static Future<bool> requestPermissions() async {
     // Without Health Connect installed the authorization call may silently

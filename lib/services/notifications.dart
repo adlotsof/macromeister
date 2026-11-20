@@ -6,6 +6,8 @@
 // The pure scheduling math (next occurrence across midnight, overdue weekly
 // semantics) lives in [nextDaily] / [nextWeekly] and is unit-tested; the
 // plugin calls are thin wrappers.
+import 'dart:io';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -24,14 +26,27 @@ class Notifications {
     if (_initialized) return;
     try {
       tzdata.initializeTimeZones(); // required before tz.getLocation
-      await _plugin.initialize(const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      await _plugin.initialize(InitializationSettings(
+        android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: const DarwinInitializationSettings(
+          requestAlertPermission: false, // permission asked on first toggle
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
       ));
-      // Android 13+ needs the runtime permission; iOS too.
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission();
+      if (Platform.isIOS) {
+        // iOS 12+ provisional/notification authorization.
+        await _plugin
+            .resolvePlatformSpecificImplementation<
+                IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(alert: true, badge: true, sound: true);
+      } else {
+        // Android 13+ needs the runtime permission.
+        await _plugin
+            .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin>()
+            ?.requestNotificationsPermission();
+      }
       _initialized = true;
     } catch (_) {
       // Plugin unavailable (tests) — reminders silently off.

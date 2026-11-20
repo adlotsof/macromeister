@@ -43,6 +43,31 @@ jobs:
       - name: Test
         run: flutter test
 
+  ios-build:
+    # Compile validation for the iOS port: simulator build, no signing.
+    # App Store/TestFlight release needs an Apple Developer account +
+    # App Store Connect API key — follow-up once the user provides one.
+    if: github.event_name != 'pull_request'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      # CI only validates compilation; the real food DBs are built for release.
+      - name: Stub bundled food databases
+        run: mkdir -p assets && touch assets/foods_off.db assets/foods_common.db
+
+      - name: Build iOS (simulator, unsigned)
+        run: flutter build ios --simulator --no-codesign
+
   build:
     # PRs get the test job only — the ~30 min APK build is not review feedback.
     if: github.event_name != 'pull_request'

@@ -4,6 +4,8 @@
 //
 // Pure formatting lives in [widgetStrings] and is unit-tested; the plugin
 // calls are fire-and-forget guarded so a widget failure never breaks logging.
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
@@ -32,8 +34,11 @@ class WidgetSync {
   }
 
   /// Recomputes the selected day's numbers and pushes them to the widget.
-  /// Fire-and-forget: all failures silent.
+  /// Fire-and-forget: all failures silent. Android-only for now — the iOS
+  /// widget needs a WidgetKit extension target (separate Xcode target +
+  /// App Group), tracked as a follow-up.
   static Future<void> push() async {
+    if (!Platform.isAndroid) return;
     try {
       final date = AppState.instance.selectedDateStr;
       final totals = await AppState.instance.totalsFor(date);
