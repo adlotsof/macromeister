@@ -15,12 +15,6 @@ val keystorePropsFile = rootProject.file("key.properties")
 val hasReleaseSigning = keystorePropsFile.exists()
 if (hasReleaseSigning) {
     keystorePropsFile.inputStream().use { keystoreProps.load(it) }
-    signingConfigs.create("release") {
-        storeFile = file(keystoreProps["storeFile"] as String)
-        storePassword = keystoreProps["storePassword"] as String
-        keyAlias = keystoreProps["keyAlias"] as String
-        keyPassword = keystoreProps["keyPassword"] as String
-    }
 }
 
 android {
@@ -59,10 +53,16 @@ android {
         release {
             // Signed with key.properties when present (CI/production); falls
             // back to the debug key so local release builds still run.
-            signingConfig = if (hasReleaseSigning)
-                signingConfigs.getByName("release")
-            else
+            signingConfig = if (hasReleaseSigning) {
+                signingConfigs.create("release") {
+                    storeFile = file(keystoreProps["storeFile"] as String)
+                    storePassword = keystoreProps["storePassword"] as String
+                    keyAlias = keystoreProps["keyAlias"] as String
+                    keyPassword = keystoreProps["keyPassword"] as String
+                }
+            } else {
                 signingConfigs.getByName("debug")
+            }
         }
     }
 }

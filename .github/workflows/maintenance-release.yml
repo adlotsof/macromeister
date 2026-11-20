@@ -69,12 +69,12 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/macrotrack-release.jks
-          cat > android/key.properties <<EOF
-          storeFile=macrotrack-release.jks
-          storePassword=$ANDROID_KEYSTORE_PASSWORD
-          keyAlias=$ANDROID_KEY_ALIAS
-          keyPassword=$ANDROID_KEY_PASSWORD
-          EOF
+          {
+            echo 'storeFile=macrotrack-release.jks'
+            printf 'storePassword=%s\n' "$ANDROID_KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$ANDROID_KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$ANDROID_KEY_PASSWORD"
+          } > android/key.properties
 
       - run: flutter pub get
 
@@ -84,6 +84,7 @@ jobs:
         run: flutter build appbundle --release --build-number="$(date -u +%Y%m%d)"
 
       - name: Bump version in pubspec.yaml and tag
+        id: bump
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -95,18 +96,29 @@ jobs:
           git config user.name "maintenance-bot"
           git config user.email "actions@github.com"
           git add pubspec.yaml
-          if git diff --cached --quiet; then echo "version unchanged"; exit 0; fi
+          if git diff --cached --quiet; then
+            echo "version unchanged"
+            echo "tag_pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           git commit -m "Maintenance build +${BUILD} (Play activity requirement)"
           git push origin HEAD:${{ github.ref_name }}
           git tag -a "v${BASE}+${BUILD}" -m "Maintenance build ${BUILD}" 2>/dev/null || true
-          git push origin "v${BASE}+${BUILD}" 2>/dev/null || true
-          # Pushing the tag triggers .github/workflows/release.yml, which
-          # uploads the bundle to the internal track and attaches the APK.
+          if git push origin "v${BASE}+${BUILD}"; then
+            echo "tag_pushed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_pushed=false" >> "$GITHUB_OUTPUT"
+          fi
+          # A successful tag push triggers .github/workflows/release.yml,
+          # which uploads the bundle to the internal track and attaches the
+          # APK; the fallback upload below is skipped in that case so Play
+          # never sees the same versionCode twice.
 
       - name: Upload bundle directly to internal track (fallback)
-        # Belt-and-braces: if the tag push above did not trigger a release
-        # run (e.g. tag already existed), upload what this job just built.
-        if: ${{ env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        # Only when the tag push above did NOT trigger a release run
+        # (e.g. the tag already existed) — otherwise release.yml handles it
+        # and a second upload would collide on the version code.
+        if: ${{ steps.bump.outputs.tag_pushed != 'true' && env.PLAY_SERVICE_ACCOUNT_JSON != '' }}
         uses: r0adkll/upload-google-play@eb49699984a39f23558439581660aa6f088acfd6 # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}

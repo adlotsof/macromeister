@@ -1126,7 +1126,11 @@ class _PhotosCard extends StatelessWidget {
 
 /// Deletes the photo's DB row and backing file.
 Future<void> _deletePhotoEverywhere(ProgressPhoto photo) async {
-  await Db.deletePhoto(photo.id!);
+  final id = photo.id;
+  if (id == null) {
+    throw StateError('progress photo has no DB id; cannot delete');
+  }
+  await Db.deletePhoto(id);
   final f = File(photo.path);
   if (await f.exists()) await f.delete();
 }
@@ -1179,11 +1183,19 @@ Future<void> confirmDeletePhoto(
   }
 }
 
-/// Visible delete affordance for one progress photo.
-class _PhotoDeleteButton extends StatelessWidget {
+/// Visible delete affordance for one progress photo. Re-entry guard so a
+/// rapid double-tap cannot stack two confirmation dialogs.
+class _PhotoDeleteButton extends StatefulWidget {
   final ProgressPhoto photo;
   final VoidCallback onChanged;
   const _PhotoDeleteButton({required this.photo, required this.onChanged});
+
+  @override
+  State<_PhotoDeleteButton> createState() => _PhotoDeleteButtonState();
+}
+
+class _PhotoDeleteButtonState extends State<_PhotoDeleteButton> {
+  bool _asking = false;
 
   @override
   Widget build(BuildContext context) {
@@ -1192,7 +1204,16 @@ class _PhotoDeleteButton extends StatelessWidget {
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: () => confirmDeletePhoto(context, photo, onChanged),
+        onTap: () async {
+          if (_asking) return;
+          _asking = true;
+          try {
+            await confirmDeletePhoto(
+                context, widget.photo, widget.onChanged);
+          } finally {
+            _asking = false;
+          }
+        },
         child: const Padding(
           padding: EdgeInsets.all(3),
           child: Icon(Icons.close, size: 14, color: Colors.white),
