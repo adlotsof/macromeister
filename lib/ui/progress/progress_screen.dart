@@ -40,6 +40,7 @@ class _ProgressBody extends StatefulWidget {
 
 class _ProgressBodyState extends State<_ProgressBody> {
   Future<_ProgressData>? _future;
+  _ProgressData? _lastData;
 
   @override
   void initState() {
@@ -77,8 +78,27 @@ class _ProgressBodyState extends State<_ProgressBody> {
     return FutureBuilder<_ProgressData>(
       future: _future,
       builder: (context, snap) {
-        final data = snap.data;
-        if (!snap.hasData || data == null) {
+        // Keep the previous data on screen during reloads — replacing the
+        // future would otherwise flash a full-screen spinner on every
+        // AppState notification.
+        if (snap.hasData && snap.data != null) _lastData = snap.data;
+        final data = snap.data ?? _lastData;
+        if (snap.hasError && data == null) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('Could not load progress data.',
+                    style: TextStyle(fontSize: 13, color: MtTheme.textDim)),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                    onPressed: _reload,
+                    child: const Text('Retry')),
+              ],
+            ),
+          );
+        }
+        if (data == null) {
           return const Center(child: CircularProgressIndicator());
         }
         return ListView(

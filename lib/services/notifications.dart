@@ -87,16 +87,21 @@ class Notifications {
   }
 
   /// (Re)schedules the daily log reminder. [enabled] false cancels it.
-  static Future<void> setDailyReminder(
+  /// Returns true when the requested state was actually applied (permission
+  /// granted and schedule written), so callers can reflect the real state.
+  static Future<bool> setDailyReminder(
       {required bool enabled, int hour = 20, int minute = 0}) async {
     await init();
     if (!enabled) {
       try {
         await _plugin.cancel(_dailyId);
-      } catch (_) {}
-      return;
+      } catch (e, st) {
+        _debugLog('cancel daily reminder failed', e, st);
+      }
+      await Db.setSetting('reminder_daily', '0');
+      return true;
     }
-    if (!await _requestPermission()) return;
+    if (!await _requestPermission()) return false;
     try {
       final at = nextDaily(DateTime.now(), hour, minute);
       await _plugin.zonedSchedule(
@@ -118,21 +123,28 @@ class Notifications {
       );
       await Db.setSetting('reminder_daily', '1');
       await Db.setSetting('reminder_daily_time', '$hour:$minute');
-    } catch (_) {}
+      return true;
+    } catch (e, st) {
+      _debugLog('schedule daily reminder failed', e, st);
+      return false;
+    }
   }
 
   /// (Re)schedules the weekly check-in reminder for the program's weekday.
-  static Future<void> setWeeklyReminder(
+  /// Returns true when the requested state was actually applied.
+  static Future<bool> setWeeklyReminder(
       {required bool enabled, int weekday = 1, int hour = 9}) async {
     await init();
     if (!enabled) {
       try {
         await _plugin.cancel(_weeklyId);
-      } catch (_) {}
+      } catch (e, st) {
+        _debugLog('cancel weekly reminder failed', e, st);
+      }
       await Db.setSetting('reminder_weekly', '0');
-      return;
+      return true;
     }
-    if (!await _requestPermission()) return;
+    if (!await _requestPermission()) return false;
     try {
       final at = nextWeekly(DateTime.now(), weekday, hour, 0);
       await _plugin.zonedSchedule(
@@ -153,6 +165,42 @@ class Notifications {
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
       );
       await Db.setSetting('reminder_weekly', '1');
-    } catch (_) {}
+      return true;
+    } catch (e, st) {
+      _debugLog('schedule weekly reminder failed', e, st);
+      return false;
+    }
+  }
+
+  /// Re-applies both reminders from their persisted settings. Called on app
+  /// resume so DST changes (the schedule is a fixed UTC wall time) and lost
+  /// alarms self-heal without a timezone-name plugin.
+  static Future<void> refreshFromSettings() async {
+    try {
+      final daily = await Db.getSetting('reminder_daily') == '1';
+      final timeStr = await Db.getSetting('reminder_daily_time');
+      final parts = (timeStr ?? '20:0').split(':');
+      await setDailyReminder(
+        enabled: daily,
+        hour: int.tryParse(parts[0]) ?? 20,
+        minute: int.tryParse(parts[1]) ?? 0,
+      );
+      final weekly = await Db.getSetting('reminder_weekly') == '1';
+      if (weekly) {
+        final profile = await Db.loadProfile();
+        await setWeeklyReminder(
+            enabled: true, weekday: profile?.checkinWeekday ?? 1);
+      }
+    } catch (e, st) {
+      _debugLog('refresh reminders failed', e, st);
+    }
+  }
+
+  static void _debugLog(String what, Object e, StackTrace st) {
+    assert(() {
+      // ignore: avoid_print
+      print('Notifications: $what: $e\n$st');
+      return true;
+    }());
   }
 }

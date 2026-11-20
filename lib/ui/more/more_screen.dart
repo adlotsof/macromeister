@@ -279,18 +279,20 @@ class _RemindersTileState extends State<_RemindersTile> {
       minute = picked.minute;
       if (mounted) setState(() => _dailyTime = picked);
     }
-    await Notifications.setDailyReminder(
+    final ok = await Notifications.setDailyReminder(
         enabled: value, hour: hour, minute: minute);
+    // Reflect the REAL state: a denied permission or failed schedule must
+    // not leave the switch ON.
     if (!mounted) return;
-    setState(() => _daily = value);
+    setState(() => _daily = value && ok);
   }
 
   Future<void> _setWeekly(bool value) async {
     final profile = await Db.loadProfile();
-    await Notifications.setWeeklyReminder(
+    final ok = await Notifications.setWeeklyReminder(
         enabled: value, weekday: profile?.checkinWeekday ?? 1);
     if (!mounted) return;
-    setState(() => _weekly = value);
+    setState(() => _weekly = value && ok);
   }
 
   @override

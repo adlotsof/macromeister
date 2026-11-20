@@ -45,21 +45,24 @@ class FastingService {
   }
 
   /// Ends the running fast (started at or before [now]); appends it to the
-  /// history and clears the marker. Returns the fast duration, or null when
-  /// no fast was running.
+  /// history and clears the marker. Returns the fast duration (clamped at
+  /// zero against clock skew), or null when no fast was running.
   static Future<Duration?> end(DateTime now) async {
     final start = await runningStart();
     if (start == null) return null;
+    final duration = now.isBefore(start) ? Duration.zero : now.difference(start);
     final h = await history();
-    final entries = [
-      {'start': start.toIso8601String(), 'end': now.toIso8601String()},
-      for (final e in h.take(29))
-        {'start': e.start.toIso8601String(), 'end': e.end.toIso8601String()},
-    ];
-    await Db.setSetting(
-        'fasting_history', jsonEncode(entries));
+    if (duration > Duration.zero) {
+      final entries = [
+        {'start': start.toIso8601String(), 'end': now.toIso8601String()},
+        for (final e in h.take(29))
+          {'start': e.start.toIso8601String(), 'end': e.end.toIso8601String()},
+      ];
+      await Db.setSetting(
+          'fasting_history', jsonEncode(entries));
+    }
     await Db.deleteSetting('fasting_start');
-    return now.difference(start);
+    return duration;
   }
 
   /// Elapsed duration of the running fast, or null.

@@ -513,6 +513,7 @@ class _MicrosCard extends StatelessWidget {
 
   Future<void> _editTargets(BuildContext context) async {
     final stored = await Db.microTargets();
+    if (!context.mounted) return;
     final controllers = {
       for (final def in Micros.all)
         def.id: TextEditingController(
@@ -520,7 +521,6 @@ class _MicrosCard extends StatelessWidget {
                 ? _fmt(stored[def.id]!)
                 : ''), // empty = use default
     };
-    if (!context.mounted) return;
     final saved = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -929,6 +929,7 @@ class _BodyMetricsCard extends StatelessWidget {
         ],
       ),
     );
+    controller.dispose();
     if (kg == null || kg <= 0) return;
     final date = AppState.instance.selectedDateStr;
     await Db.upsertWeight(WeightEntry(date: date, weightKg: kg));
@@ -1021,6 +1022,7 @@ class _WaterCard extends StatelessWidget {
         ],
       ),
     );
+    controller.dispose();
     if (goal == null || goal <= 0) return;
     await Db.setSetting('water_goal_ml', '$goal');
     AppState.instance.refresh();
@@ -1591,6 +1593,7 @@ class _FastingCardState extends State<_FastingCard> {
               : 'Fast ended: ${FastingService.fmtDuration(duration)}')));
     } else {
       await FastingService.start(DateTime.now());
+      if (!mounted) return;
     }
     AppState.instance.refresh();
     widget.onChanged();
@@ -1624,6 +1627,7 @@ class _FastingCardState extends State<_FastingCard> {
         ],
       ),
     );
+    controller.dispose();
     if (v == null || v <= 0 || v > 168) return;
     await Db.setSetting(_goalH, '$v');
     await _load();
@@ -1817,6 +1821,7 @@ class _CheckInPrompt extends StatelessWidget {
         ],
       ),
     );
+    controller.dispose();
     if (kg == null || kg <= 0) return;
     final now = DateTime.now();
     await Db.upsertWeight(WeightEntry(date: fmtDate(now), weightKg: kg));

@@ -8,6 +8,7 @@ import 'app_state.dart';
 import 'db.dart';
 import 'services/backup.dart';
 import 'services/food_updates.dart';
+import 'services/notifications.dart';
 import 'theme.dart';
 import 'ui/home_shell.dart';
 import 'ui/program/onboarding_screen.dart';
@@ -116,10 +117,16 @@ class _HomeWithUpdatesState extends State<_HomeWithUpdates> {
     _maybeUpdate();
     // Daily auto-backup (settings-gated, rotated, silent).
     Backup.runAutoBackup();
+    // Re-apply reminder schedules: heals DST shifts (schedules are fixed
+    // UTC wall times) and alarms lost while the process was dead.
+    Notifications.refreshFromSettings();
     // Re-check on each app resume, at most every 7 days.
     _timer = Timer.periodic(
         const Duration(hours: 168), (_) => _maybeUpdate());
-    AppLifecycleListener(onResume: _maybeUpdate);
+    AppLifecycleListener(onResume: () {
+      _maybeUpdate();
+      Notifications.refreshFromSettings();
+    });
   }
 
   @override
