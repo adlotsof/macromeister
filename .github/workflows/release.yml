@@ -84,12 +84,14 @@ jobs:
 
       - run: flutter pub get
 
-      # AAB for Play, APK for direct GitHub download.
+      # AAB for Play, APK for direct GitHub download. The build number is the
+      # workflow run number so every upload carries a unique versionCode
+      # (Google Play rejects reused ones).
       - name: Build signed app bundle
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --build-number="${{ github.run_number }}"
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --build-number="${{ github.run_number }}"
 
       - name: Create GitHub Release with APK
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
