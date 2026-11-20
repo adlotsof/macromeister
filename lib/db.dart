@@ -546,6 +546,12 @@ class Db {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// Removes a setting row entirely (getSetting then returns null).
+  static Future<void> deleteSetting(String key) async {
+    await (await instance)
+        .delete('settings', where: 'k = ?', whereArgs: [key]);
+  }
+
   static Future<Map<String, String>> allSettings() async {
     final rows = await (await instance).query('settings');
     return {for (final r in rows) r['k'] as String: (r['v'] ?? '') as String};

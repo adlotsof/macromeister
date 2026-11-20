@@ -1,4 +1,5 @@
 // Dashboard: today's energy picture, macros, weight, habits and quick actions.
+import 'dart:async';
 import 'dart:io';
 
 import 'package:fl_chart/fl_chart.dart';
@@ -12,6 +13,7 @@ import '../../db.dart';
 import '../../micros.dart';
 import '../../models.dart';
 import '../../services/health_sync.dart';
+import '../../services/fasting.dart';
 import '../../services/expenditure.dart';
 import '../../theme.dart';
 import 'dashboard_widgets.dart';
@@ -246,6 +248,8 @@ class _DashboardViewState extends State<_DashboardView> {
                         dateStr: fmtDate(widget.date),
                         onChanged: _reload),
                   ],
+                  const SizedBox(height: 12),
+                  _FastingCard(data: data, onChanged: _reload),
                   if (data.settings['show_habits']!) ...[
                     const SizedBox(height: 12),
                     _HabitsCard(
@@ -1532,6 +1536,197 @@ class _PhotoDeleteButtonState extends State<_PhotoDeleteButton> {
   }
 }
 
+
+// ---------------------------------------------------------------- fasting
+
+/// Fasting timer card: start/stop, elapsed time against the selected preset
+/// goal, and the last few completed fasts. Live ticks every second.
+class _FastingCard extends StatefulWidget {
+  final _DashData data;
+  final VoidCallback onChanged;
+  const _FastingCard({required this.data, required this.onChanged});
+
+  @override
+  State<_FastingCard> createState() => _FastingCardState();
+}
+
+class _FastingCardState extends State<_FastingCard> {
+  static const _goalH = 'fasting_goal_h'; // user goal, default 16
+  Timer? _tick;
+  DateTime? _start;
+  int _goalH_ = 16;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    // 1-minute granularity is plenty; 30 s avoids visible clock drift.
+    _tick = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && _start != null) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    _start = await FastingService.runningStart();
+    _goalH_ =
+        int.tryParse(await Db.getSetting(_goalH) ?? '') ?? 16;
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _toggle() async {
+    if (_start != null) {
+      final duration = await FastingService.end(DateTime.now());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: MtTheme.surfaceHi,
+          content: Text(duration == null
+              ? 'Fast ended'
+              : 'Fast ended: ${FastingService.fmtDuration(duration)}')));
+    } else {
+      await FastingService.start(DateTime.now());
+    }
+    AppState.instance.refresh();
+    widget.onChanged();
+    await _load();
+  }
+
+  Future<void> _editGoal() async {
+    final controller = TextEditingController(text: '$_goalH_');
+    final v = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: MtTheme.surface,
+        title:
+            const Text('Fasting goal', style: TextStyle(fontSize: 17)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(),
+          decoration: const InputDecoration(labelText: 'Goal (hours)'),
+          onSubmitted: (s) =>
+              Navigator.pop(ctx, int.tryParse(s)),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child:
+                  const Text('Cancel', style: TextStyle(color: MtTheme.textDim))),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, int.tryParse(controller.text)),
+              child: const Text('Save')),
+        ],
+      ),
+    );
+    if (v == null || v <= 0 || v > 168) return;
+    await Db.setSetting(_goalH, '$v');
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final elapsed = _start == null
+        ? null
+        : DateTime.now().difference(_start!);
+    final clamped = elapsed == null || elapsed.isNegative
+        ? Duration.zero
+        : elapsed;
+    final goal = Duration(hours: _goalH_);
+    final progress =
+        elapsed == null ? 0.0 : (clamped.inMinutes / goal.inMinutes).clamp(0.0, 1.0);
+    final remaining = elapsed == null
+        ? goal
+        : (goal - clamped).isNegative ? Duration.zero : goal - clamped;
+    return MtCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CardHeader('Fasting',
+              icon: Icons.hourglass_top,
+              trailing: InkWell(
+                onTap: _editGoal,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Text('goal h',
+                      style:
+                          TextStyle(fontSize: 11, color: MtTheme.textDim)),
+                ),
+              )),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Text(
+                elapsed == null
+                    ? 'Not fasting'
+                    : FastingService.fmtDuration(elapsed),
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: MtTheme.text),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                elapsed == null
+                    ? '· $_goalH_ h presets'
+                    : '· ${FastingService.fmtDuration(remaining)} to $_goalH_ h goal',
+                style: const TextStyle(fontSize: 12, color: MtTheme.textDim),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: MtTheme.surfaceHi,
+              valueColor: AlwaysStoppedAnimation(
+                  progress >= 1.0 ? MtTheme.accent : MtTheme.accentAlt),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                  backgroundColor: elapsed == null
+                      ? MtTheme.accent
+                      : MtTheme.danger),
+              icon: Icon(elapsed == null
+                  ? Icons.play_arrow
+                  : Icons.stop),
+              onPressed: _toggle,
+              label: Text(elapsed == null ? 'Start fast' : 'End fast'),
+            ),
+          ),
+          if (elapsed == null && widget.data.lastCheckIn != null) ...[
+            const SizedBox(height: 8),
+            FutureBuilder<List<({DateTime start, DateTime end})>>(
+              future: FastingService.history(),
+              builder: (context, snap) {
+                final h = snap.data ?? const [];
+                if (h.isEmpty) return const SizedBox.shrink();
+                final last = h.first;
+                return Text(
+                  'Last fast: ${FastingService.fmtDuration(last.end.difference(last.start))} '
+                  '(${fmtDate(last.end)})',
+                  style: const TextStyle(
+                      fontSize: 11, color: MtTheme.textDim),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 // ---------------------------------------------------------------- check-in prompt
 
