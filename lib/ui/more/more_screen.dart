@@ -13,6 +13,7 @@ import 'data_sources_screen.dart';
 import 'data_visibility.dart';
 import 'habits_screen.dart';
 import 'integrations.dart';
+import '../progress/progress_screen.dart';
 import 'recipes_screen.dart';
 
 class MoreScreen extends StatelessWidget {
@@ -43,6 +44,14 @@ class MoreScreen extends StatelessWidget {
           ),
           const _SectionLabel('Data'),
           _AutoBackupTile(),
+          ListTile(
+            leading: Icon(Icons.insights, color: MtTheme.accent),
+            title: Text('Progress'),
+            subtitle: Text('Weight trend, intake history, photos'),
+            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
+            onTap: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const ProgressScreen())),
+          ),
           ListTile(
             leading: Icon(Icons.ios_share, color: MtTheme.accent),
             title: const Text('Export data'),
