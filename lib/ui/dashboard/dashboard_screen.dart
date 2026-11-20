@@ -1048,6 +1048,7 @@ class _PhotosCard extends StatelessWidget {
                     onTap: () => SharePlus.instance.share(ShareParams(
                         files: [XFile(p.path)],
                         text: 'Progress photo ${p.date}')),
+                    onLongPress: () => confirmDeletePhoto(context, p, onChanged),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: SizedBox(
@@ -1075,6 +1076,12 @@ class _PhotosCard extends StatelessWidget {
                                     style: const TextStyle(
                                         fontSize: 9, color: Colors.white)),
                               ),
+                            ),
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: _PhotoDeleteButton(
+                                  photo: p, onChanged: onChanged),
                             ),
                           ],
                         ),
@@ -1116,6 +1123,85 @@ class _PhotosCard extends StatelessWidget {
     }
   }
 }
+
+/// Deletes the photo's DB row and backing file.
+Future<void> _deletePhotoEverywhere(ProgressPhoto photo) async {
+  await Db.deletePhoto(photo.id!);
+  final f = File(photo.path);
+  if (await f.exists()) await f.delete();
+}
+
+/// Confirmation + delete of a progress photo (DB row and backing file).
+/// [onDelete] defaults to the real deletion; tests can inject a recorder.
+Future<void> confirmDeletePhoto(
+    BuildContext context, ProgressPhoto photo, VoidCallback onChanged,
+    {Future<void> Function(ProgressPhoto)? onDelete}) async {
+  final ok = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: MtTheme.surface,
+          title: const Text('Delete photo?'),
+          content: Text('Remove the progress photo from ${photo.date}?'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel')),
+            FilledButton(
+                style:
+                    FilledButton.styleFrom(backgroundColor: MtTheme.danger),
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Delete')),
+          ],
+        ),
+      ) ??
+      false;
+  if (!ok || !context.mounted) return;
+  try {
+    if (onDelete != null) {
+      await onDelete(photo);
+    } else {
+      await _deletePhotoEverywhere(photo);
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: MtTheme.surfaceHi,
+        content: Text('Photo deleted')));
+    AppState.instance.refresh();
+    onChanged();
+  } catch (_) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: MtTheme.danger,
+          content: Text('Could not delete photo')));
+    }
+  }
+}
+
+/// Visible delete affordance for one progress photo.
+class _PhotoDeleteButton extends StatelessWidget {
+  final ProgressPhoto photo;
+  final VoidCallback onChanged;
+  const _PhotoDeleteButton({required this.photo, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black54,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: () => confirmDeletePhoto(context, photo, onChanged),
+        child: const Padding(
+          padding: EdgeInsets.all(3),
+          child: Icon(Icons.close, size: 14, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
 
 // ---------------------------------------------------------------- check-in prompt
 
