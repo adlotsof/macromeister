@@ -70,6 +70,25 @@ class _LogBody extends StatelessWidget {
                       ),
                     ),
                   ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: MtTheme.textDim),
+                    tooltip: 'Meal actions',
+                    onSelected: (v) {
+                      if (v == 'yesterday') {
+                        _copyMeals(context, source: fmtDate(selected.subtract(const Duration(days: 1))), target: dateStr);
+                      } else if (v == 'date') {
+                        _copyFromPickedDate(context, selected, dateStr);
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                          value: 'yesterday',
+                          child: Text("Copy yesterday's meals")),
+                      PopupMenuItem(
+                          value: 'date',
+                          child: Text('Copy meals from date…')),
+                    ],
+                  ),
                   IconButton(
                     icon: Icon(
                       Icons.chevron_right,
@@ -114,6 +133,80 @@ class _LogBody extends StatelessWidget {
       builder: (context, child) => Theme(data: Theme.of(context), child: child!),
     );
     if (picked != null) AppState.instance.selectedDate = picked;
+  }
+
+  Future<void> _copyFromPickedDate(
+      BuildContext context, DateTime current, String target) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: current.subtract(const Duration(days: 1)),
+      firstDate: DateTime(2020),
+      lastDate: today(),
+      builder: (context, child) => Theme(data: Theme.of(context), child: child!),
+    );
+    if (picked == null) return;
+    if (!context.mounted) return;
+    await _copyMeals(context, source: fmtDate(picked), target: target);
+  }
+
+  /// Copies every non-fasted entry from [source] into [target] (same meal,
+  /// grams, and nutrient values). Idempotent-ish: asks before stacking onto
+  /// a day that already has entries.
+  Future<void> _copyMeals(BuildContext context,
+      {required String source, required String target}) async {
+    final src = await Db.logsForDay(source);
+    final items = src.where((l) => !l.fasted).toList();
+    if (items.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Nothing logged on $source to copy.')));
+      }
+      return;
+    }
+    final existing = await Db.logsForDay(target);
+    if (existing.isNotEmpty) {
+      if (!context.mounted) return;
+      final navigator = Navigator.of(context);
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Add to existing entries?'),
+          content: Text(
+              '$target already has ${existing.length} entr${existing.length == 1 ? 'y' : 'ies'}. '
+              'Copy ${items.length} more from $source?'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel')),
+            FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Copy')),
+          ],
+        ),
+      );
+      if (ok != true || !navigator.mounted) return;
+    }
+    for (final l in items) {
+      await Db.insertLog(LogEntry(
+        date: target,
+        meal: l.meal,
+        foodId: l.foodId,
+        name: l.name,
+        brand: l.brand,
+        grams: l.grams,
+        kcal: l.kcal,
+        protein: l.protein,
+        carbs: l.carbs,
+        fat: l.fat,
+        fiber: l.fiber,
+        micros: l.micros,
+      ));
+    }
+    AppState.instance.refresh();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Copied ${items.length} entries from $source.')));
+    }
   }
 }
 
