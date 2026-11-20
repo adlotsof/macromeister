@@ -9,6 +9,7 @@ import 'package:sqflite/sqflite.dart';
 import 'micros.dart';
 import 'models.dart';
 import 'services/health_sync.dart' show hcSync, HealthSync;
+import 'services/widget_sync.dart' show WidgetSync;
 
 class Db {
   static Database? _db;
@@ -334,6 +335,7 @@ class Db {
     final id = await (await instance).insert('log_entries', e.toMap());
     hcSync(() => HealthSync.writeMealFromEntry(
         LogEntry.fromMap({...e.toMap(), 'id': id})));
+    WidgetSync.push();
     return id;
   }
 
@@ -343,11 +345,13 @@ class Db {
     await (await instance)
         .update('log_entries', m, where: 'id = ?', whereArgs: [e.id]);
     hcSync(() => HealthSync.writeMealFromEntry(e));
+    WidgetSync.push();
   }
 
   static Future<void> deleteLog(int id) async {
     await (await instance).delete('log_entries', where: 'id = ?', whereArgs: [id]);
     hcSync(() => HealthSync.deleteMealForEntry(id));
+    WidgetSync.push();
   }
 
   static Future<List<LogEntry>> logsForDay(String date) async {
@@ -507,6 +511,7 @@ class Db {
     await db.insert('hydration', {'date': date, 'ml': newMl},
         conflictAlgorithm: ConflictAlgorithm.replace);
     hcSync(() => HealthSync.writeWater(DateTime.parse(date), newMl));
+    WidgetSync.push();
     return newMl;
   }
 
@@ -522,6 +527,7 @@ class Db {
         {'date': date, 'ml': ml.clamp(0, 10000)},
         conflictAlgorithm: ConflictAlgorithm.replace);
     hcSync(() => HealthSync.writeWater(DateTime.parse(date), ml));
+    WidgetSync.push();
   }
 
   // ---- micronutrient targets ----

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#181E24"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/widget_remaining"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="— kcal left"
+        android:textColor="#E8EDF2"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/widget_macros"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="P— · C— · F—"
+        android:textColor="#93A1AE"
+        android:textSize="12sp"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/widget_water"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Water: — ml"
+        android:textColor="#93A1AE"
+        android:textSize="12sp"
+        android:layout_marginTop="4dp" />
+</LinearLayout>

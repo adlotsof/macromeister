@@ -1,7 +1,7 @@
 package com.trsonn.macrotrack
 
 import android.os.Bundle
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
@@ -11,8 +11,13 @@ import java.io.FileOutputStream
  * Streams a bundled Flutter asset out of the APK to a file in small chunks.
  * The Dart AssetBundle API only loads whole files into memory, which OOM-kills
  * the app for the 668 MB food database; AssetManager streams it instead.
+ *
+ * Extends FlutterFragmentActivity (not FlutterActivity) because the health
+ * plugin casts the hosting Activity to androidx.activity.ComponentActivity —
+ * with FlutterActivity its registration throws and aborts the whole plugin
+ * registration chain.
  */
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val channelName = "com.trsonn.macrotrack/asset_copy"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
