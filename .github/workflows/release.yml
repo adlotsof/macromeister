@@ -77,8 +77,10 @@ jobs:
           echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
           git config user.name "release-bot"
           git config user.email "actions@github.com"
-          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-            echo "tag $TAG already exists"
+          # Check the REMOTE, not the local clone (shallow checkout has no
+          # tags; a prior failed run may already have pushed this tag).
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "tag $TAG already exists on origin"
           else
             git tag -a "$TAG" -m "Auto release (run ${RUN_NUMBER})"
             git push origin "$TAG"
