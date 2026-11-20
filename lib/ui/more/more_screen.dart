@@ -41,6 +41,7 @@ class MoreScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const HabitsScreen())),
           ),
           const _SectionLabel('Data'),
+          _AutoBackupTile(),
           ListTile(
             leading: const Icon(Icons.ios_share, color: MtTheme.accent),
             title: const Text('Export data'),
@@ -123,6 +124,47 @@ class MoreScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Food log cleared')));
     }
+  }
+}
+
+/// Settings toggle for the daily auto-backup (default ON, keeps 7 files).
+class _AutoBackupTile extends StatefulWidget {
+  const _AutoBackupTile();
+  @override
+  State<_AutoBackupTile> createState() => _AutoBackupTileState();
+}
+
+class _AutoBackupTileState extends State<_AutoBackupTile> {
+  bool? _enabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final v = await Db.getSetting('auto_backup');
+    if (!mounted) return;
+    setState(() => _enabled = v != '0'); // default on
+  }
+
+  Future<void> _set(bool value) async {
+    await Db.setSetting('auto_backup', value ? '1' : '0');
+    if (!mounted) return;
+    setState(() => _enabled = value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      secondary:
+          const Icon(Icons.backup_outlined, color: MtTheme.accent),
+      title: const Text('Daily auto-backup'),
+      subtitle: const Text('Keeps the last 7 backups on this device'),
+      value: _enabled ?? true,
+      onChanged: (v) => _set(v),
+    );
   }
 }
 

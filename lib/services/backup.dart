@@ -5,6 +5,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -53,6 +54,43 @@ class Backup {
     final file = File('${dir.path}/macrotrack_backup_$stamp.json');
     await file.writeAsString(json, flush: true);
     return file.path;
+  }
+
+  /// Settings-gated daily auto-backup into the app's documents dir with
+  /// rotation (keeps the last [keep] files). Runs at most once per day
+  /// (tracked via the 'auto_backup_last' setting); every failure is silent —
+  /// a backup problem must never block the app. Default: ON.
+  static Future<void> runAutoBackup({int keep = 7, Directory? docsOverride}) async {
+    try {
+      if (await Db.getSetting('auto_backup') == '0') return;
+      final todayStr = DateTime.now().toIso8601String().substring(0, 10);
+      if (await Db.getSetting('auto_backup_last') == todayStr) return;
+      final docs = docsOverride ?? await getApplicationDocumentsDirectory();
+      final backupDir = Directory('${docs.path}/backups');
+      await backupDir.create(recursive: true);
+      final file = File('${backupDir.path}/macrotrack_auto_$todayStr.json');
+      await file.writeAsString(await build(), flush: true);
+      await rotate(backupDir, keep: keep);
+      await Db.setSetting('auto_backup_last', todayStr);
+    } catch (_) {
+      // silent
+    }
+  }
+
+  /// Deletes the oldest auto-backup files, keeping the newest [keep].
+  @visibleForTesting
+  static Future<void> rotate(Directory dir, {int keep = 7}) async {
+    final files = (await dir.list().toList())
+        .whereType<File>()
+        .where((f) => f.path.contains('macrotrack_auto_') &&
+            f.path.endsWith('.json'))
+        .toList()
+      ..sort((a, b) => a.path.compareTo(b.path)); // dated names sort by age
+    for (var i = 0; i < files.length - keep; i++) {
+      try {
+        await files[i].delete();
+      } catch (_) {}
+    }
   }
 
   /// Reads and validates a backup file, then restores it, replacing current

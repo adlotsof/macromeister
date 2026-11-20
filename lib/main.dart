@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'app_state.dart';
 import 'db.dart';
+import 'services/backup.dart';
 import 'services/food_updates.dart';
 import 'theme.dart';
 import 'ui/home_shell.dart';
@@ -79,6 +80,8 @@ class _HomeWithUpdatesState extends State<_HomeWithUpdates> {
   void initState() {
     super.initState();
     _maybeUpdate();
+    // Daily auto-backup (settings-gated, rotated, silent).
+    Backup.runAutoBackup();
     // Re-check on each app resume, at most every 7 days.
     _timer = Timer.periodic(
         const Duration(hours: 168), (_) => _maybeUpdate());
