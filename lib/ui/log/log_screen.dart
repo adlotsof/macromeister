@@ -28,6 +28,10 @@ class _LogBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = AppState.instance;
     final selected = app.selectedDate;
+    // Ensure a targets computation is in flight if the cache was invalidated
+    // (e.g. after a program edit); when it completes AppState notifies and
+    // this body rebuilds with the fresh snapshot.
+    app.currentTargets();
     final dateStr = app.selectedDateStr;
     final isToday = dateStr == fmtDate(today());
     return FutureBuilder<List<LogEntry>>(
@@ -80,13 +84,8 @@ class _LogBody extends StatelessWidget {
               ),
             ),
             // ---- totals summary ----
-            FutureBuilder<MacroTargets>(
-              future: app.currentTargets(),
-              builder: (context, tsnap) {
-                final t = tsnap.data;
-                return _TotalsCard(totals: totals, targets: t);
-              },
-            ),
+            _TotalsCard(
+                totals: totals, targets: app.targetsSnapshot),
             // ---- meals ----
             Expanded(
               child: ListView(

@@ -1,6 +1,7 @@
 // SQLite data layer (sqflite). Single shared database.
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show MethodChannel;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -11,6 +12,11 @@ class Db {
   static Database? _db;
   static Database? _foodsDb;
   static Database? _commonDb;
+
+  /// Overrides the main database filename. Tests set a unique name per suite
+  /// so suites running in parallel under `flutter test` don't lock each
+  /// other's database file.
+  static String? dbPathOverride;
 
   /// The bundled USDA SR Legacy COMMON-FOODS database (7.7k generic whole
   /// foods: "Eggplant, raw", "Salad greens, mixed raw", chicken breast, rice,
@@ -109,6 +115,18 @@ class Db {
     return _db!;
   }
 
+  /// Closes the cached connections and drops the cached singletons so a
+  /// later [instance]/search call reopens fresh. Used by tests.
+  @visibleForTesting
+  static Future<void> resetForTest() async {
+    await _db?.close();
+    _db = null;
+    await _foodsDb?.close();
+    _foodsDb = null;
+    await _commonDb?.close();
+    _commonDb = null;
+  }
+
   /// The bundled full Open Food Facts database (all ~4.9M named products).
   /// Copied out of the APK on first use; re-copied when the bundled version
   /// changes (marker file `foods_off.db.v<N>`).
@@ -168,7 +186,9 @@ class Db {
 
   static Future<Database> _open() async {
     final dir = await getDatabasesPath();
-    final db = await openDatabase(p.join(dir, 'macrotrack.db'), version: 2,
+    final db = await openDatabase(
+        p.join(dir, dbPathOverride ?? 'macrotrack.db'),
+        version: 2,
         onUpgrade: (db, from, to) async {
       if (from < 2) {
         // MacroFactor body-metrics import carries body-fat %; add the column.

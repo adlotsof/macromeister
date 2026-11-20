@@ -45,14 +45,40 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void refresh() => notifyListeners();
+  void refresh() {
+    // Invalidate the cached targets so the next currentTargets() call
+    // reflects whatever just changed (program edit, check-in, …).
+    _targetsFuture = null;
+    notifyListeners();
+  }
 
   String get selectedDateStr => fmtDate(_selected);
 
   Future<DayTotals> totalsFor(String date) async =>
       DayTotals.fromLogs(await Db.logsForDay(date));
 
-  Future<MacroTargets> currentTargets() async {
+  MacroTargets? _targetsValue;
+  Future<MacroTargets>? _targetsFuture;
+
+  /// Last completed program targets, or null before the first computation.
+  /// Screens render this synchronously — no FutureBuilder flicker — and rely
+  /// on the [notifyListeners] that fires when a recomputation completes.
+  MacroTargets? get targetsSnapshot => _targetsValue;
+
+  /// Current program targets. The computation is cached until the next
+  /// [refresh]: screens build FutureBuilders with this future on every
+  /// rebuild, and a fresh DB round-trip per rebuild made the targets card
+  /// flash to "no targets" (and hid them entirely while the round-trip was
+  /// in flight) every time any screen notified.
+  Future<MacroTargets> currentTargets() {
+    final cached = _targetsFuture;
+    if (cached != null) return cached;
+    final f = _computeTargets();
+    _targetsFuture = f;
+    return f;
+  }
+
+  Future<MacroTargets> _computeTargets() async {
     final profile = await Db.loadProfile();
     final last = await Db.lastCheckIn();
     final weights = await Db.weights();
@@ -70,8 +96,13 @@ class AppState extends ChangeNotifier {
         : p.goalRateKgPerWeek > 0.05
             ? 'gain'
             : 'maintain';
-    final target = last?.dailyTarget ??
-        ExpenditureEngine.dailyTarget(exp, p.goalRateKgPerWeek);
+    // Recompute the target from the CURRENT profile and goal rate. The
+    // check-in's stored dailyTarget was derived from the profile as of
+    // check-in time and went stale the moment the user edited their program
+    // (goal rate, goal weight, activity) — the dashboard and log then showed
+    // the old target even though the program editor preview showed the new
+    // one. The check-in only anchors the expenditure smoothing now.
+    final target = ExpenditureEngine.dailyTarget(exp, p.goalRateKgPerWeek);
     final macros0 = ExpenditureEngine.macroGoals(
       dailyTargetKcal: target,
       bodyWeightKg: weights.isNotEmpty ? weights.last.weightKg : p.startWeightKg,
@@ -96,13 +127,18 @@ class AppState extends ChangeNotifier {
         carbs: carbsKcal < 0 ? 0.0 : (carbsKcal / 4).floorToDouble(),
       );
     }
-    return MacroTargets(
+    final t = MacroTargets(
       expenditure: exp,
       dailyTargetKcal: target,
       protein: macros.protein,
       carbs: macros.carbs,
       fat: macros.fat,
     );
+    _targetsValue = t;
+    // Screens that rendered the previous snapshot (or nothing, on first
+    // load) repaint with the fresh values.
+    notifyListeners();
+    return t;
   }
 }
 
