@@ -25,12 +25,14 @@ cat >> "$SETTINGS" <<'EOF'
 
 // MT-PATCH-PLUGIN-REPOS: declare repositories explicitly for the included
 // build's plugin resolution (it defines none of its own, so it would default
-// to the Gradle plugin portal only).
+// to the Gradle plugin portal only, whose Central proxy gets HTTP 429
+// rate-limited from shared runner egress IPs). JetBrains' cache-redirector
+// is a CDN-backed mirror of repo.maven.apache.org without such limits.
 pluginManagement {
     repositories {
-        gradlePluginPortal()
-        mavenCentral()
+        maven { url = uri("https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2") }
         google()
+        gradlePluginPortal()
     }
 }
 EOF
