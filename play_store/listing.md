@@ -49,8 +49,8 @@ OFFLINE-FIRST, PRIVATE BY DESIGN
   Connect / Apple Health
 • Your data stays on your device. No account required.
 
-MacroTrack is an independent project inspired by the workflows of adaptive
-macro-coaching programs. It is not affiliated with MacroFactor.
+MacroTrack is an independent, offline-first tracker: no account, no ads, no
+subscription — every feature is included.
 
 Download MacroTrack and let the numbers do the coaching.
 
