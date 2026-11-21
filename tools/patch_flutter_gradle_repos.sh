@@ -23,17 +23,11 @@ if grep -q "MT-PATCH-PLUGIN-REPOS" "$SETTINGS"; then
 fi
 cat >> "$SETTINGS" <<'EOF'
 
-// MT-PATCH-PLUGIN-REPOS: resolve buildscript/plugin deps (kotlin-dsl,
-// kotlin-stdlib) from Google's Maven Central mirror first; the portal's
-// Central proxy is unreliable from hosted runners.
+// MT-PATCH-PLUGIN-REPOS: declare repositories explicitly for the included
+// build's plugin resolution (it defines none of its own, so it would default
+// to the Gradle plugin portal only).
 pluginManagement {
     repositories {
-        exclusiveContent {
-            forRepository {
-                maven { url = uri("https://maven.google.com/maven2") }
-            }
-            filter { includeGroupByRegex("org\\.jetbrains\\..*") }
-        }
         gradlePluginPortal()
         mavenCentral()
         google()
