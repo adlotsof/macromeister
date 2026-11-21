@@ -48,9 +48,7 @@ def main():
                     help='rollout status for production (completed | inProgress)')
     args = ap.parse_args()
 
-    raw = os.environ.get('PLAY_SA_JSON')
-    if not raw:
-        raw = base64.b64decode(os.environ['PLAY_SA_B64']).decode()
+    raw = os.environ.get('PLAY_SA_B64') or os.environ.get('PLAY_SA_JSON')
     try:
         sa = json.loads(raw)
     except json.JSONDecodeError:
