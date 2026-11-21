@@ -149,7 +149,7 @@ class DataExportScreen extends StatelessWidget {
       await file.writeAsString('\uFEFF$csv', encoding: utf8);
       await SharePlus.instance.share(ShareParams(
           files: [XFile(file.path, mimeType: 'text/csv')],
-          text: 'MacroTrack export: $name'));
+          text: 'MacroMeister export: $name'));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

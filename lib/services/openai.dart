@@ -52,7 +52,7 @@ class Ai {
                 'Content-Type': 'application/json',
                 if (cfg.provider == 'openrouter') ...{
                   'HTTP-Referer': 'https://macrotrack.local',
-                  'X-Title': 'MacroTrack',
+                  'X-Title': 'MacroMeister',
                 },
               },
               body: jsonEncode({
@@ -290,7 +290,7 @@ class Ai {
                   'Content-Type': 'application/json',
                   if (cfg.provider == 'openrouter') ...{
                     'HTTP-Referer': 'https://macrotrack.local',
-                    'X-Title': 'MacroTrack',
+                    'X-Title': 'MacroMeister',
                   },
                 },
                 body: jsonEncode({

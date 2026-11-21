@@ -18,7 +18,7 @@ Future<OffSearchResult> searchOff(String query, {int limit = 25}) async {
       '&search_simple=1&action=process&json=1&page_size=$limit');
   try {
     final res = await http
-        .get(uri, headers: {'User-Agent': 'MacroTrack - Android - Version 1.0'})
+        .get(uri, headers: {'User-Agent': 'MacroMeister - Android - Version 1.0'})
         .timeout(const Duration(seconds: 12));
     if (res.statusCode != 200) return OffSearchResult(const [], 0);
     final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
@@ -41,7 +41,7 @@ Future<Food?> lookupOffBarcode(String barcode) async {
         .get(
             Uri.parse(
                 'https://world.openfoodfacts.org/api/v2/product/$barcode.json'),
-            headers: {'User-Agent': 'MacroTrack - Android - Version 1.0'})
+            headers: {'User-Agent': 'MacroMeister - Android - Version 1.0'})
         .timeout(const Duration(seconds: 12));
     if (res.statusCode != 200) return null;
     final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;

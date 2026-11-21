@@ -27,7 +27,7 @@ class MacroTrackApp extends StatelessWidget {
     return AnimatedBuilder(
       animation: AppState.instance,
       builder: (context, _) => MaterialApp(
-        title: 'MacroTrack',
+        title: 'MacroMeister',
         debugShowCheckedModeBanner: false,
         theme: MtTheme.theme(),
         home: const _AppRoot(),

@@ -1,14 +1,14 @@
-# Google Play listing — MacroTrack
+# Google Play listing — MacroMeister
 
 ## App title (30 chars max)
-MacroTrack: Calorie Counter
+MacroMeister: Calorie Counter
 
 ## Short description (80 chars max)
 Calorie & macro tracking with an adaptive coach, offline food DB and progress.
 
 ## Full description (4000 chars max)
 
-MacroTrack is a focused calorie and macro tracker with an adaptive coaching
+MacroMeister is a focused calorie and macro tracker with an adaptive coaching
 program — the numbers that matter, without the clutter.
 
 TRACK WITHOUT THE BUSYWORK
@@ -49,10 +49,10 @@ OFFLINE-FIRST, PRIVATE BY DESIGN
   Connect / Apple Health
 • Your data stays on your device. No account required.
 
-MacroTrack is an independent, offline-first tracker: no account, no ads, no
+MacroMeister is an independent, offline-first tracker: no account, no ads, no
 subscription — every feature is included.
 
-Download MacroTrack and let the numbers do the coaching.
+Download MacroMeister and let the numbers do the coaching.
 
 ## Graphics
 - feature_graphic.png — 1024x500 feature graphic

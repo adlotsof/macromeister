@@ -1,4 +1,4 @@
-# MacroTrack
+# MacroMeister
 
 A local-first nutrition and macro tracker for Android (Flutter). All data
 stays on your device — no account, no cloud, no tracking.
