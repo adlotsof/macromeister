@@ -127,7 +127,7 @@ d.text((cx - 46, cy + 26), "kcal left", font=font(30), fill=DIM)
 bg = Image.alpha_composite(bg.convert("RGBA"), ring_bg)
 d = ImageDraw.Draw(bg)
 # title + tagline
-d.text((70, 150), "MacroTrack", font=font(88), fill=TEXT)
+d.text((70, 150), "MacroMeister", font=font(88), fill=TEXT)
 d.text((74, 268), "Calorie & macro tracking", font=font(40), fill=GREEN_HI)
 d.text((74, 330), "with an adaptive coach", font=font(40), fill=GREEN_HI)
 # macro dots

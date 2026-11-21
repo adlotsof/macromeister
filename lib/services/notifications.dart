@@ -122,7 +122,7 @@ class Notifications {
       await _plugin.zonedSchedule(
         _dailyId,
         'Time to log your meals',
-        'Keep your MacroTrack streak going — log today\'s food.',
+        'Keep your MacroMeister streak going — log today\'s food.',
         _tz(at),
         const NotificationDetails(
           android: AndroidNotificationDetails(

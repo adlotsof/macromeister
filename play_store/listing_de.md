@@ -1,14 +1,14 @@
-# Google Play Eintrag — MacroTrack (Deutsch)
+# Google Play Eintrag — MacroMeister (Deutsch)
 
 ## App-Titel (max. 30 Zeichen)
-MacroTrack: Kalorienzähler
+MacroMeister: Kalorienzähler
 
 ## Kurze Beschreibung (max. 80 Zeichen)
 Kalorien & Makros tracken mit adaptivem Coach, Offline-Datenbank, Fortschritt.
 
 ## Vollständige Beschreibung (max. 4000 Zeichen)
 
-MacroTrack ist ein fokussierter Kalorien- und Makro-Tracker mit adaptivem
+MacroMeister ist ein fokussierter Kalorien- und Makro-Tracker mit adaptivem
 Coaching-Programm — die Zahlen, die zählen, ohne Ballast.
 
 TRACKEN OHNE MEHRARBEIT
@@ -49,7 +49,7 @@ OFFLINE FIRST, PRIVAT BY DESIGN
   mit Google Health Connect / Apple Health
 • Deine Daten bleiben auf deinem Gerät. Kein Konto nötig.
 
-MacroTrack ist ein unabhängiger, Offline-first-Tracker: kein Konto, keine
+MacroMeister ist ein unabhängiger, Offline-first-Tracker: kein Konto, keine
 Werbung, kein Abo — alle Funktionen sind enthalten.
 
-Lade MacroTrack herunter und lass die Zahlen für dich coachen.
+Lade MacroMeister herunter und lass die Zahlen für dich coachen.
