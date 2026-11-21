@@ -38,11 +38,6 @@
 	<string>Saves progress photos to your photo library when you share them.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Pick a nutrition-label photo so its macros can be read automatically.</string>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>processing</string>
-	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
