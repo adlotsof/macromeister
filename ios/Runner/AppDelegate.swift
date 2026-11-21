@@ -49,8 +49,8 @@ import UIKit
       asset,
     ]
     let srcPath = candidates.lazy
-      .map { Bundle.main.path(forResource: $0, ofType: nil) }
-      .first { $0 != nil }
+      .compactMap { Bundle.main.path(forResource: $0, ofType: nil) }
+      .first
     guard let src = srcPath else {
       result(FlutterError(code: "io", message: "asset not found: \(asset)", details: nil))
       return
