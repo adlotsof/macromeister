@@ -23,7 +23,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _birthYear = TextEditingController(text: '1990');
   final _dietStyle = TextEditingController();
   String _sex = 'male';
-  double _goalRate = -0.25;
+  double _rateMag = 0.25;
   double _activity = 1.4;
   int _checkinWeekday = 1;
   String _programType = 'coached';
@@ -33,6 +33,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
 
+  double get _currentW => double.tryParse(_weight.text) ?? 75;
+  double get _goalW => double.tryParse(_goalWeight.text) ?? 70;
+
+  /// Rate with the sign derived from the goal direction: goal below the
+  /// current weight means losing (negative), above means gaining, equal
+  /// means maintain (0). The slider only picks the magnitude, so a
+  /// contradictory "gaining towards a lower goal" can't be created.
+  double get _signedRate {
+    if ((_goalW - _currentW).abs() < 0.01) return 0;
+    return (_goalW > _currentW ? 1 : -1) * _rateMag;
+  }
+
+  String get _directionLabel {
+    final r = _signedRate;
+    if (r.abs() < 0.01) return 'Maintain weight';
+    return r < 0 ? 'Lose ${r.abs().toStringAsFixed(2)} kg/week'
+                 : 'Gain ${r.toStringAsFixed(2)} kg/week';
+  }
+
   Profile get _profile => Profile(
         name: _name.text.trim(),
         sex: _sex,
@@ -40,7 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         heightCm: double.tryParse(_height.text) ?? 175,
         startWeightKg: double.tryParse(_weight.text) ?? 75,
         goalWeightKg: double.tryParse(_goalWeight.text) ?? 70,
-        goalRateKgPerWeek: _goalRate,
+        goalRateKgPerWeek: _signedRate,
         activityFactor: _activity,
         dietStyle: _dietStyle.text.trim(),
         checkinWeekday: _checkinWeekday,
@@ -81,11 +100,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_step == 2) {
       final goal = double.tryParse(_goalWeight.text) ?? 0;
       if (goal <= 25) return false;
-      // Goal must be in the direction of the goal rate: losing to a weight
-      // above the current one (or gaining to one below) is contradictory.
-      final start = double.tryParse(_weight.text) ?? 0;
-      if (_goalRate < -0.01 && goal >= start) return false;
-      if (_goalRate > 0.01 && goal <= start) return false;
       return true;
     }
     return true;
@@ -237,23 +251,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             decoration: const InputDecoration(labelText: 'Goal weight (kg)'),
           ),
           const SizedBox(height: 20),
-          Text('Weekly rate: ${_goalRate.toStringAsFixed(2)} kg/week',
-              style: TextStyle(color: MtTheme.text)),
+          Text(_directionLabel, style: TextStyle(color: MtTheme.text)),
+          const SizedBox(height: 8),
           Slider(
-            value: _goalRate,
-            min: -1.0,
-            max: 0.5,
-            divisions: 30,
-            label: '${_goalRate > 0 ? '+' : ''}${_goalRate.toStringAsFixed(2)}',
-            onChanged: (v) => setState(() => _goalRate = v),
+            value: _rateMag,
+            min: 0.0,
+            max: 1.0,
+            divisions: 20,
+            label: '${_rateMag.toStringAsFixed(2)} kg/week',
+            onChanged: (v) => setState(() => _rateMag = v),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Lose', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
-              Text('Maintain', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
-              Text('Gain', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+              Text('Slow', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+              Text('Balanced', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+              Text('Fast', style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Direction is derived from your goal: '
+            '${_goalW < _currentW ? 'goal below your current weight = losing' : _goalW > _currentW ? 'goal above your current weight = gaining' : 'goal equals your current weight = maintaining'}.',
+            style: TextStyle(color: MtTheme.textDim, fontSize: 12),
           ),
         ],
       );

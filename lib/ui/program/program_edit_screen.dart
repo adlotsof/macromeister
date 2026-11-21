@@ -25,11 +25,11 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
   final _proteinG = TextEditingController();
   final _fatG = TextEditingController();
   Profile? _profile;
+  double _rateMag = 0.25;
   bool _loaded = false;
   bool _customMacros = false;
   int _macroTargetKcal = 0;
   double _expKcal = 0;
-  final _goalRate = TextEditingController();
 
   static const _weekdayNames = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
@@ -58,7 +58,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
     final fg = await Db.getSetting('macro_fat_g');
     _proteinG.text = pg ?? '';
     _fatG.text = fg ?? '';
-    _goalRate.text = p.goalRateKgPerWeek.toStringAsFixed(2);
+    _rateMag = p.goalRateKgPerWeek.abs();
     if (!mounted) return;
     setState(() {
       _profile = p;
@@ -85,11 +85,29 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
     setState(() => _expKcal = exp);
   }
 
+  double get _currentW =>
+      double.tryParse(_weight.text.replaceAll(',', '.')) ?? 75;
+  double get _goalW =>
+      double.tryParse(_goalWeight.text.replaceAll(',', '.')) ?? 70;
+
+  /// Rate sign derived from the goal direction (goal below current weight =
+  /// losing), so the editor can't produce contradictory combos.
+  double get _signedRate {
+    if ((_goalW - _currentW).abs() < 0.01) return 0;
+    return (_goalW > _currentW ? 1 : -1) * _rateMag;
+  }
+
+  String get _directionLabel {
+    final r = _signedRate;
+    if (r.abs() < 0.01) return 'Maintain weight';
+    return r < 0 ? 'Losing ${r.abs().toStringAsFixed(2)} kg/week'
+                 : 'Gaining ${r.toStringAsFixed(2)} kg/week';
+  }
+
   /// Persists goal-rate changes and recomputes the displayed target.
   Future<void> _saveGoalParams() async {
-    final rate = double.tryParse(_goalRate.text.replaceAll(',', '.'));
-    if (rate == null || _profile == null) return;
-    final updated = _profile!.copyWith(goalRateKgPerWeek: rate.clamp(-1.0, 1.0));
+    if (_profile == null) return;
+    final updated = _profile!.copyWith(goalRateKgPerWeek: _signedRate);
     setState(() => _profile = updated);
     await Db.saveProfile(updated);
     AppState.instance.refresh();
@@ -132,7 +150,7 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
   void dispose() {
     for (final c in [
       _name, _height, _weight, _goalWeight, _birthYear, _dietStyle,
-      _proteinG, _fatG, _goalRate
+      _proteinG, _fatG
     ]) {
       c.dispose();
     }
@@ -286,7 +304,19 @@ class _ProgramEditScreenState extends State<ProgramEditScreen> {
           _labeled('Height (cm)', TextField(controller: _height, keyboardType: const TextInputType.numberWithOptions(decimal: true))),
           _labeled('Starting weight (kg)', TextField(controller: _weight, keyboardType: const TextInputType.numberWithOptions(decimal: true))),
           _labeled('Goal weight (kg)', TextField(controller: _goalWeight, keyboardType: const TextInputType.numberWithOptions(decimal: true))),
-          _labeled('Goal rate (kg/week, negative = losing)', TextField(controller: _goalRate, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), onChanged: (_) => _saveGoalParams())),
+          _labeled('Weekly rate · $_directionLabel',
+              Slider(
+                value: _rateMag.clamp(0.0, 1.0),
+                min: 0.0,
+                max: 1.0,
+                divisions: 20,
+                label: '${_rateMag.toStringAsFixed(2)} kg/week',
+                activeColor: MtTheme.accent,
+                onChanged: (v) {
+                  setState(() => _rateMag = v);
+                  _saveGoalParams();
+                },
+              )),
           Text('Activity level',
               style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
           Slider(
