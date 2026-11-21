@@ -1,0 +1,40 @@
+name: promote-play-production
+
+on:
+  workflow_dispatch:
+    inputs:
+      status:
+        description: 'Production rollout status'
+        type: choice
+        options: [completed, inProgress]
+        default: completed
+
+# Promotes the newest internal-track release to production using the
+# existing Play service account. Deliberately manual — production is a
+# human decision, mirroring the Play Console button.
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Play API auth deps
+        run: pip install google-auth
+
+      - name: Promote internal release to production
+        env:
+          PLAY_SA_B64: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          PLAY_PACKAGE: com.trsonn.macrotrack
+        run: |
+          python3 tools/promote_play_production.py \
+            --package "$PLAY_PACKAGE" \
+            --status "${{ inputs.status || 'completed' }}"
