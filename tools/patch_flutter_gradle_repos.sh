@@ -32,7 +32,7 @@ pluginManagement {
             forRepository {
                 maven { url = uri("https://maven.google.com/maven2") }
             }
-            filter { includeGroupByRegex "org\\.jetbrains\\..*" }
+            filter { includeGroupByRegex("org\\.jetbrains\\..*") }
         }
         gradlePluginPortal()
         mavenCentral()
