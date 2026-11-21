@@ -28,7 +28,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Play API auth deps
-        run: pip install google-auth
+        run: pip install google-auth requests
 
       - name: Promote internal release to production
         env:
