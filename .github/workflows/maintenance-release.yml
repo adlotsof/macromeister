@@ -50,7 +50,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          flutter-version: 3.50.0 # 3.50.1 needs kotlin-stdlib 2.3.20, not yet on plugins.gradle.org
+          flutter-version: 3.50.0 # pin: releases must not ride untested Flutter patch bumps
           cache: true
 
       - name: Build food databases
@@ -81,6 +81,9 @@ jobs:
 
       # Fresh build number every run, so Play always accepts the bundle even
       # when the version name is unchanged (e.g. 20260101.1).
+      - name: Patch Flutter Gradle toolchain plugin repositories
+        run: chmod +x tools/patch_flutter_gradle_repos.sh && ./tools/patch_flutter_gradle_repos.sh
+
       - name: Build app bundle (maintenance build number)
         run: flutter build appbundle --release --build-number="$(date -u +%Y%m%d)"
 

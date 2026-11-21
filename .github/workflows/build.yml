@@ -28,7 +28,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          flutter-version: 3.50.0 # 3.50.1 needs kotlin-stdlib 2.3.20, not yet on plugins.gradle.org
+          flutter-version: 3.50.0 # pin: releases must not ride untested Flutter patch bumps
           cache: true
 
       - run: flutter pub get
@@ -58,7 +58,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          flutter-version: 3.50.0 # 3.50.1 needs kotlin-stdlib 2.3.20, not yet on plugins.gradle.org
+          flutter-version: 3.50.0 # pin: releases must not ride untested Flutter patch bumps
           cache: true
 
       - run: flutter pub get
@@ -102,7 +102,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          flutter-version: 3.50.0 # 3.50.1 needs kotlin-stdlib 2.3.20, not yet on plugins.gradle.org
+          flutter-version: 3.50.0 # pin: releases must not ride untested Flutter patch bumps
           cache: true
 
       # The two bundled food databases are built from public datasets on every
@@ -126,6 +126,9 @@ jobs:
       # health 13.x still applies 'kotlin-android', which fails under AGP 9
       # with built-in Kotlin (android.builtInKotlin=true). Patch the pub-cache
       # copy of the plugin; pub cache is clean on every CI run.
+      - name: Patch Flutter Gradle toolchain plugin repositories
+        run: chmod +x tools/patch_flutter_gradle_repos.sh && ./tools/patch_flutter_gradle_repos.sh
+
       - name: Patch health plugin for built-in Kotlin
         run: chmod +x tools/patch_health_plugin.sh && ./tools/patch_health_plugin.sh
 
