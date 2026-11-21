@@ -28,6 +28,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
+          flutter-version: 3.50.0 # 3.50.1 needs kotlin-stdlib 2.3.20, not yet on plugins.gradle.org
           cache: true
 
       - run: flutter pub get
@@ -57,6 +58,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
+          flutter-version: 3.50.0 # 3.50.1 needs kotlin-stdlib 2.3.20, not yet on plugins.gradle.org
           cache: true
 
       - run: flutter pub get
@@ -100,6 +102,7 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
+          flutter-version: 3.50.0 # 3.50.1 needs kotlin-stdlib 2.3.20, not yet on plugins.gradle.org
           cache: true
 
       # The two bundled food databases are built from public datasets on every
