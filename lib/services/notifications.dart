@@ -35,11 +35,8 @@ class Notifications {
         ),
       ));
       if (Platform.isIOS) {
-        // iOS 12+ provisional/notification authorization.
-        await _plugin
-            .resolvePlatformSpecificImplementation<
-                IOSFlutterLocalNotificationsPlugin>()
-            ?.requestPermissions(alert: true, badge: true, sound: true);
+        // No blanket permission request at startup — permission is asked
+        // (via _requestPermission) when the user enables a reminder.
       } else {
         // Android 13+ needs the runtime permission.
         await _plugin

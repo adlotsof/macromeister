@@ -17,7 +17,24 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
+  // Screenshot/debug hook: start on a given tab via
+  // flutter run/build --dart-define=SHOT_TAB=log|program|more
+  int _index = _initialTab();
+
+  static int _initialTab() {
+    // Plain switch — a const-map lookup crashes AOT builds when the
+    // dart-define value is lost and the key misses.
+    switch (String.fromEnvironment('SHOT_TAB')) {
+      case 'log':
+        return 1;
+      case 'program':
+        return 3;
+      case 'more':
+        return 4;
+      default:
+        return 0;
+    }
+  }
 
   static const _pages = [
     DashboardScreen(),
