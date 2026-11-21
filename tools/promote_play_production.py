@@ -48,9 +48,13 @@ def main():
                     help='rollout status for production (completed | inProgress)')
     args = ap.parse_args()
 
-    raw = os.environ.get('PLAY_SA_JSON') or base64.b64decode(
-        os.environ['PLAY_SA_B64']).decode()
-    sa = json.loads(raw)
+    raw = os.environ.get('PLAY_SA_JSON')
+    if not raw:
+        raw = base64.b64decode(os.environ['PLAY_SA_B64']).decode()
+    try:
+        sa = json.loads(raw)
+    except json.JSONDecodeError:
+        sa = json.loads(base64.b64decode(raw).decode())
     tk = token(sa)
 
     edit = call('POST', f'/{args.package}/edits', tk, {})
