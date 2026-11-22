@@ -13,9 +13,8 @@
 // Steps, Muscle Groups, Favorites, History, Fasting, notes, gym profiles)
 // are skipped — documented in FEATURES.md.
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:excel/excel.dart';
+import 'xlsx_reader.dart';
 
 import '../app_state.dart';
 import '../db.dart';
@@ -33,13 +32,7 @@ class MfXlsx {
   /// excel 4.x wraps cell values in typed cell objects; unwrap to raw
   /// String/num/DateTime so the helpers below see plain values.
   static Object? _unwrap(Object? v) {
-    if (v is TextCellValue) return v.value.text ?? '';
-    if (v is IntCellValue) return v.value;
-    if (v is DoubleCellValue) return v.value;
-    if (v is BoolCellValue) return v.value;
-    if (v is DateCellValue) {
-      return DateTime(v.year, v.month, v.day);
-    }
+    // XlsxReader already yields plain String/num/DateTime/bool values.
     return v;
   }
 
@@ -58,6 +51,10 @@ class MfXlsx {
     if (v is DateTime) {
       return '${v.year}-${v.month.toString().padLeft(2, '0')}-${v.day.toString().padLeft(2, '0')}';
     }
+    if (v is String &&
+        RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(v.trim())) {
+      return v.trim().substring(0, 10); // already ISO
+    }
     if (v is String && v.contains('/')) {
       final p = v.trim().split('/');
       if (p.length == 3) {
@@ -73,20 +70,18 @@ class MfXlsx {
   }
 
   /// Returns the sheet's rows keyed by lowercase header.
-  static List<Map<String, Object?>> _sheet(Excel excel, String name) {
-    final sh = excel.tables[name];
-    if (sh == null) return [];
-    final rows = sh.rows;
-    if (rows.isEmpty) return [];
+  static List<Map<String, Object?>> _sheet(XlsxBook book, String name) {
+    final rows = book.tables[name];
+    if (rows == null || rows.isEmpty) return const [];
     final header =
-        rows.first.map((c) => _s(c?.value).toLowerCase()).toList();
+        rows.first.map((c) => _s(c).toLowerCase()).toList();
     final out = <Map<String, Object?>>[];
     for (final r in rows.skip(1)) {
       final m = <String, Object?>{};
       var any = false;
       for (var i = 0; i < header.length && i < r.length; i++) {
         if (header[i].isEmpty) continue;
-        final v = _unwrap(r[i]?.value);
+        final v = _unwrap(r[i]);
         if (v != null && v.toString().isNotEmpty) any = true;
         m[header[i]] = v;
       }
@@ -96,13 +91,12 @@ class MfXlsx {
   }
 
   static Future<MfXlsxResult> importFile(String path) async {
-    final bytes = await _readBytes(path);
-    final excel = Excel.decodeBytes(bytes);
+    final book = XlsxReader.decodeFile(path);
     final skipped = <String>[];
 
     // ---- User Profile ----
     var profileNote = '';
-    final profileRows = _sheet(excel, 'User Profile');
+    final profileRows = _sheet(book, 'User Profile');
     var profile = await Db.loadProfile();
     for (final r in profileRows) {
       profile ??= Profile(
@@ -123,7 +117,7 @@ class MfXlsx {
     }
 
     // ---- Weight Goals (latest goal) ----
-    final goalRows = _sheet(excel, 'Weight Goals');
+    final goalRows = _sheet(book, 'Weight Goals');
     if (goalRows.isNotEmpty) {
       final last = goalRows.last;
       final gw = _n(last['goal weight (kg)']);
@@ -149,7 +143,7 @@ class MfXlsx {
 
     // ---- Scale Weight ----
     var wCount = 0;
-    final wRows = _sheet(excel, 'Scale Weight');
+    final wRows = _sheet(book, 'Scale Weight');
     final wCol = wRows.isNotEmpty && wRows.first.containsKey('weight (kg)');
     for (final r in wRows) {
       final date = _isoDate(r['date']);
@@ -178,7 +172,7 @@ class MfXlsx {
     var fCount = 0;
     final customNames =
         (await Db.customFoods()).map((f) => f.name.toLowerCase()).toSet();
-    for (final r in _sheet(excel, 'Custom Foods')) {
+    for (final r in _sheet(book, 'Custom Foods')) {
       final name = _s(r['food name']);
       if (name.isEmpty) continue;
       final sw = _n(r['serving weight (g)']);
@@ -207,10 +201,11 @@ class MfXlsx {
     var rCount = 0;
     final recipeNames =
         (await Db.recipes()).map((r) => r.name.toLowerCase()).toSet();
-    for (final r in _sheet(excel, 'Recipes')) {
+    for (final r in _sheet(book, 'Recipes')) {
       final name = _s(r['recipe name']);
       if (name.isEmpty) continue;
-      final servings = (_n(r['serving qty']) ?? 1) < 1 ? 1 : _n(r['serving qty'])!;
+      // Serving Qty may be absent or blank in the export — default to 1.
+      final servings = (_n(r['serving qty']) ?? 1) < 1 ? 1.0 : (_n(r['serving qty']) ?? 1);
       double div(Object? k) => (_n(r[k]) ?? 0) / servings;
       final ing = _s(r['ingredients'])
           .split('\n')
@@ -233,7 +228,7 @@ class MfXlsx {
 
     // ---- Calories & Macros -> daily totals ----
     var logCount = 0;
-    for (final r in _sheet(excel, 'Calories & Macros')) {
+    for (final r in _sheet(book, 'Calories & Macros')) {
       final date = _isoDate(r['date']);
       final kcal = _n(r['calories (kcal)']);
       if (date.isEmpty || kcal == null) continue;
@@ -255,8 +250,8 @@ class MfXlsx {
 
     // ---- latest Nutrition Program Settings -> a check-in carrying MF's
     // current target; Expenditure's last value -> engine prior ----
-    final progRows = _sheet(excel, 'Nutrition Program Settings');
-    final expRows = _sheet(excel, 'Expenditure');
+    final progRows = _sheet(book, 'Nutrition Program Settings');
+    final expRows = _sheet(book, 'Expenditure');
     final today = fmtDate(DateTime.now());
     final weekStart = _mondayOf(DateTime.now());
     double? exp;
@@ -280,7 +275,7 @@ class MfXlsx {
     }
 
     AppState.instance.refresh();
-    final hasBodyMetrics = excel.tables['Body Metrics'] != null;
+    final hasBodyMetrics = book.tables['Body Metrics'] != null;
     if (hasBodyMetrics) {
       skipped.add('Body Metrics (girth measurements — no schema table yet)');
     }
@@ -292,7 +287,7 @@ class MfXlsx {
       'Exercise Settings', 'Workout Settings', 'Gym Profiles',
       'Custom Exercises'
     ]) {
-      if (excel.tables[s] != null) skipped.add(s);
+      if (book.tables[s] != null) skipped.add(s);
     }
     return MfXlsxResult(
         wCount, logCount, fCount, rCount, profileNote, skipped);
@@ -305,4 +300,3 @@ class MfXlsx {
   }
 }
 
-Future<List<int>> _readBytes(String path) => File(path).readAsBytes();
