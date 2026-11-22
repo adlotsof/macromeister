@@ -38,6 +38,9 @@ jobs:
       - name: Stub bundled food databases
         run: mkdir -p assets && touch assets/foods_off.db assets/foods_common.db
 
+      - name: Check food-DB builder schema/row arity
+        run: python3 tools/check_builder_arity.py
+
       - name: Analyze
         run: flutter analyze
 
