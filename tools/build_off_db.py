@@ -47,7 +47,7 @@ def main():
         "CREATE TABLE foods ("
         "code TEXT PRIMARY KEY, name TEXT NOT NULL, brand TEXT, country TEXT,"
         "serving_g REAL, kcal REAL, protein REAL, carbs REAL,"
-        "fat REAL, fiber REAL)"
+        "fat REAL, fiber REAL, micros TEXT)"
     )
     db.execute(
         "CREATE INDEX idx_foods_name ON foods (name COLLATE NOCASE)"
@@ -85,23 +85,24 @@ def main():
             serving = _f(row[IDX["serving_quantity"]])
             batch.append((
                 (row[IDX["code"]] or "")[:40], name, brand, country,
-                serving,
+                serving, None,
                 round(kcal, 1) if kcal is not None else None,
                 round(protein, 1) if protein is not None else None,
                 round(carbs, 1) if carbs is not None else None,
                 round(fat, 1) if fat is not None else None,
                 _f(row[IDX["fiber"]]) or 0.0,
+                None,  # micros: not extracted from the OFF dump
             ))
             if len(batch) >= 50000:
                 db.executemany(
-                    "INSERT OR REPLACE INTO foods VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    "INSERT OR REPLACE INTO foods VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                     batch)
                 kept += len(batch)
                 batch = []
                 print(f"  {kept} rows, {time.time()-t0:.0f}s", flush=True)
     if batch:
         db.executemany(
-            "INSERT OR REPLACE INTO foods VALUES (?,?,?,?,?,?,?,?,?,?)", batch)
+            "INSERT OR REPLACE INTO foods VALUES (?,?,?,?,?,?,?,?,?,?,?)", batch)
         kept += len(batch)
     db.commit()
     db.execute("VACUUM")

@@ -27,7 +27,7 @@ class Db {
   /// packaged products OFF covers).
   /// Copied out of the APK on first use, same crash-safe native streaming as
   /// the big OFF database.
-  static const int _commonDbVersion = 1;
+  static const int _commonDbVersion = 2;
   static Future<Database> commonDb() async {
     if (_commonDb != null) return _commonDb!;
     final dir = await getDatabasesPath();
@@ -83,13 +83,29 @@ class Db {
     }
     rankExprs.add('CASE WHEN name LIKE ? THEN 0 ELSE 1 END');
     rankArgs.add('${tokens.last}%');
-    return db.rawQuery('''
+    // The bundled DBs built before micronutrient tracking lack the `micros`
+    // column — fall back to a micros-less query so search works on both
+    // schemas (Food.micros is simply untracked for those rows).
+    final withMicros = '''
       SELECT code, name, brand, country, serving_g, kcal, protein, carbs, fat, fiber, micros
       FROM foods
       WHERE ${wheres.join(' AND ')}
       ORDER BY ${rankExprs.join(', ')}, LENGTH(name)
       LIMIT 30
-    ''', [...args, ...rankArgs]);
+    ''';
+    final withoutMicros = '''
+      SELECT code, name, brand, country, serving_g, kcal, protein, carbs, fat, fiber
+      FROM foods
+      WHERE ${wheres.join(' AND ')}
+      ORDER BY ${rankExprs.join(', ')}, LENGTH(name)
+      LIMIT 30
+    ''';
+    try {
+      return await db.rawQuery(withMicros, [...args, ...rankArgs]);
+    } on DatabaseException catch (e) {
+      if (!e.toString().contains('no such column: micros')) rethrow;
+      return await db.rawQuery(withoutMicros, [...args, ...rankArgs]);
+    }
   }
 
   static Food _foodFromRow(Map<String, Object?> r, String source) => Food(
@@ -134,7 +150,7 @@ class Db {
   /// The bundled full Open Food Facts database (all ~4.9M named products).
   /// Copied out of the APK on first use; re-copied when the bundled version
   /// changes (marker file `foods_off.db.v<N>`).
-  static const int _foodsDbVersion = 3;
+  static const int _foodsDbVersion = 4;
   /// Newest OFF delta end-timestamp at bundle build time (updates after this
   /// are applied from the daily deltas; see lib/services/food_updates.dart).
   static const int _bundledDeltaTs = 1794984251;

@@ -95,6 +95,7 @@ def _row_of(fid, name, source, portion_g, n):
         round(n.get("carbs", 0.0) or 0.0, 1),
         round(n.get("fat", 0.0) or 0.0, 1),
         round(n.get("fiber", 0.0) or 0.0, 1),
+        None,  # micros: USDA rows don't track micronutrients (yet)
     )
 
 
@@ -168,14 +169,14 @@ def main():
         "CREATE TABLE foods ("
         "code TEXT PRIMARY KEY, name TEXT NOT NULL, brand TEXT, country TEXT,"
         "serving_g REAL, kcal REAL, protein REAL, carbs REAL,"
-        "fat REAL, fiber REAL)"
+        "fat REAL, fiber REAL, micros TEXT)"
     )
     db.execute("CREATE INDEX idx_foods_name ON foods (name COLLATE NOCASE)")
     db.execute("CREATE INDEX idx_foods_brand ON foods (brand COLLATE NOCASE)")
     batch = list(rows.values())
     for i in range(0, len(batch), 5000):
         db.executemany(
-            "INSERT OR REPLACE INTO foods VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "INSERT OR REPLACE INTO foods VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             batch[i:i + 5000])
     db.commit()
     db.execute("VACUUM")
