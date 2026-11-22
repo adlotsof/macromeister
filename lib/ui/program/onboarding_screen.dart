@@ -247,6 +247,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _title('Your goal'),
           TextField(
             controller: _goalWeight,
+            onChanged: (_) => setState(() {}),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(labelText: 'Goal weight (kg)'),
           ),

@@ -14,6 +14,7 @@ import '../../micros.dart';
 import '../../models.dart';
 import '../../services/health_sync.dart';
 import '../../services/fasting.dart';
+import '../../services/checkin.dart';
 import '../../services/expenditure.dart';
 import '../../theme.dart';
 import 'dashboard_widgets.dart';
@@ -1657,7 +1658,7 @@ class _FastingCardState extends State<_FastingCard> {
                 onTap: _editGoal,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  child: Text('goal h',
+                  child: Text(fastingGoalLabel(_goalH_),
                       style:
                           TextStyle(fontSize: 11, color: MtTheme.textDim)),
                 ),
@@ -1732,6 +1733,10 @@ class _FastingCardState extends State<_FastingCard> {
   }
 }
 
+/// Fasting-card goal label ('goal 16 h'). Regression for a missing string
+/// interpolation that rendered the literal text 'goal h'.
+String fastingGoalLabel(int goalHours) => 'goal $goalHours h';
+
 // ---------------------------------------------------------------- check-in prompt
 
 class _CheckInPrompt extends StatelessWidget {
@@ -1744,14 +1749,12 @@ class _CheckInPrompt extends StatelessWidget {
     final profile = data.profile;
     if (profile == null || profile.programType != 'coached') return const SizedBox.shrink();
     final now = DateTime.now();
-    final thisWeek = fmtDate(weekStart(now));
-    final alreadyDone =
-        data.lastCheckIn != null && data.lastCheckIn!.weekStart == thisWeek;
-    // Overdue behavior: from the configured check-in weekday onward the
-    // prompt stays visible until the check-in is done — a missed day must
-    // not silently stall the coached program (weekday 1 = Monday).
-    final due = now.weekday >= profile.checkinWeekday;
-    if (alreadyDone || !due) return const SizedBox.shrink();
+    // Prompt shows only on the chosen check-in weekday (MacroFactor
+    // semantics); lib/services/checkin.dart documents the regression this
+    // fixes (it used to stay visible all week with a Monday check-in).
+    final due = isCheckInDue(now, profile.checkinWeekday,
+        lastCheckInWeekStart: data.lastCheckIn?.weekStart);
+    if (!due) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(top: 12),
