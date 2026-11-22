@@ -85,7 +85,7 @@ def main():
             serving = _f(row[IDX["serving_quantity"]])
             batch.append((
                 (row[IDX["code"]] or "")[:40], name, brand, country,
-                serving, None,
+                serving,
                 round(kcal, 1) if kcal is not None else None,
                 round(protein, 1) if protein is not None else None,
                 round(carbs, 1) if carbs is not None else None,
