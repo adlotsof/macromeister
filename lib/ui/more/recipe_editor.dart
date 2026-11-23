@@ -90,8 +90,6 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
   }
 
   Future<void> _save() async {
-    // ignore: avoid_print
-    print('RECIPE save name=${_name.text.trim()} ings=${_ings.length}');
     if (_name.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Give the recipe a name')));

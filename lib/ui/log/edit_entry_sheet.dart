@@ -1,8 +1,11 @@
 // Edit an existing log entry: tap an entry in the diary to change the
 // serving size (gram-based entries) or the absolute macros (zero-gram
 // quick-add entries), or delete the entry.
+import 'dart:io';
+
 // ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../app_state.dart';
 import '../../db.dart';
@@ -32,6 +35,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
   late final TextEditingController _fat;
   String? _error;
   bool _saving = false;
+  late String? _photo = widget.entry.photo;
 
   @override
   void initState() {
@@ -101,6 +105,7 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
         fat: _p(_fat),
         fiber: e.fiber,
         fasted: e.fasted,
+        photo: _photo,
       );
       setState(() => _saving = true);
       await Db.updateLog(updated);
@@ -114,6 +119,20 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
     await Db.deleteLog(widget.entry.id!);
     AppState.instance.refresh();
     if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _pickPhoto() async {
+    try {
+      final x = await ImagePicker().pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1200,
+          imageQuality: 80);
+      final picked = x ?? await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked == null) return;
+      if (mounted) setState(() => _photo = picked.path);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Could not attach photo');
+    }
   }
 
   @override
@@ -197,6 +216,37 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                       decoration:
                           const InputDecoration(labelText: 'Fat g'))),
             ]),
+          ],
+          // Meal photo (custom foods can attach one): view, replace, remove.
+          if (_photo != null) ...[
+            const SizedBox(height: 12),
+            Row(children: [
+              ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(File(_photo!),
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, st) =>
+                          const SizedBox(width: 56, height: 56))),
+              const SizedBox(width: 12),
+              TextButton.icon(
+                  onPressed: _saving ? null : _pickPhoto,
+                  icon: const Icon(Icons.photo_camera, size: 18),
+                  label: const Text('Replace')),
+              IconButton(
+                  onPressed: _saving
+                      ? null
+                      : () => setState(() => _photo = null),
+                  icon: const Icon(Icons.close, size: 18),
+                  color: MtTheme.textDim),
+            ]),
+          ] else ...[
+            const SizedBox(height: 12),
+            TextButton.icon(
+                onPressed: _saving ? null : _pickPhoto,
+                icon: const Icon(Icons.add_a_photo, size: 18),
+                label: const Text('Add photo')),
           ],
           if (_error != null) ...[
             const SizedBox(height: 8),

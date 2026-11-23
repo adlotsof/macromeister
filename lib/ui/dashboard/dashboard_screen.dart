@@ -226,16 +226,18 @@ class _DashboardViewState extends State<_DashboardView> {
                     const SizedBox(height: 12),
                     _BodyMetricsCard(data: data, onChanged: _reload),
                   ],
-                  if (data.settings['show_steps']!) ...[
-                    const SizedBox(height: 12),
-                    _StepsCard(data: data),
-                  ],
+                  // Water before steps: the +250/+500 buttons must be
+                  // reachable without scrolling (they landed below the fold).
                   if (data.settings['show_water']!) ...[
                     const SizedBox(height: 12),
                     _WaterCard(
                         data: data,
                         dateStr: fmtDate(widget.date),
                         onChanged: _reload),
+                  ],
+                  if (data.settings['show_steps']!) ...[
+                    const SizedBox(height: 12),
+                    _StepsCard(data: data),
                   ],
                   const SizedBox(height: 12),
                   _FastingCard(data: data, onChanged: _reload),
@@ -847,6 +849,9 @@ class _BodyMetricsCard extends StatelessWidget {
                   value: trend == null
                       ? '—'
                       : '${trend >= 0 ? '+' : ''}${trend.toStringAsFixed(2)} kg/wk',
+                  sub: trend == null
+                      ? 'Needs ~3 weights over 14 days'
+                      : null,
                   icon: Icons.trending_down,
                   iconColor: MtTheme.accentAlt,
                 ),

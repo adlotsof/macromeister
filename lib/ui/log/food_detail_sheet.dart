@@ -1,6 +1,7 @@
 // Food detail sheet: adjust grams/servings + meal, then log the entry.
 // ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app_state.dart';
 import '../../db.dart';
@@ -129,6 +130,7 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
       fiber: _for100(widget.food.fiber),
       fasted: _fasted,
     ));
+    HapticFeedback.selectionClick();
     AppState.instance.refresh();
     // Stay in the add-food sheet; the user leaves via the back button.
     if (mounted) Navigator.of(context).pop();

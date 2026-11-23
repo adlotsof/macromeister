@@ -31,11 +31,24 @@ class DataSourcesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             _block(
-              'USDA FoodData Central',
-              'The common-foods database (foods_common.db) is built from USDA '
-                  'FoodData Central: FNDDS 2021-2023 and SR Legacy (April 2018). '
-                  'USDA FoodData Central data are in the public domain, '
-                  'published under CC0 1.0 Universal.\n\n'
+              'USDA FoodData Central — FNDDS 2021-2023',
+              'The familiar-food names and portion weights in the '
+                  'common-foods database (foods_common.db) come from USDA '
+                  'FoodData Central FNDDS 2021-2023 (Survey Foods). USDA '
+                  'FoodData Central data are in the public domain, published '
+                  'under CC0 1.0 Universal.\n\n'
+                  'Suggested citation: U.S. Department of Agriculture, '
+                  'Agricultural Research Service. FoodData Central. '
+                  'fdc.nal.usda.gov.',
+              'https://fdc.nal.usda.gov/',
+            ),
+            const SizedBox(height: 16),
+            _block(
+              'USDA FoodData Central — SR Legacy (April 2018)',
+              'Generic whole foods not covered by FNDDS (the fallback rows in '
+                  'foods_common.db) come from USDA FoodData Central SR Legacy '
+                  '(April 2018). Also in the public domain under CC0 1.0 '
+                  'Universal.\n\n'
                   'Suggested citation: U.S. Department of Agriculture, '
                   'Agricultural Research Service. FoodData Central. '
                   'fdc.nal.usda.gov.',

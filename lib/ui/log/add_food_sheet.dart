@@ -5,6 +5,7 @@ import 'dart:io';
 
 // ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../app_state.dart';
@@ -399,9 +400,16 @@ class _SearchTabState extends State<_SearchTab> {
   }
 
   Widget _results() {
-    final localIds = _off.map((f) => f.offId).toSet();
+    // Dedupe across sources by normalized name+brand: the same food shows
+    // up as 'My food' (saved after the first add) AND again as
+    // 'Common food'/'Open Food Facts' — identical duplicate rows.
+    String key(Food f) =>
+        '${f.name.trim().toLowerCase()}|${f.brand.trim().toLowerCase()}';
+    final seen = <String>{};
     final localShown =
-        _local.where((f) => f.offId == null || !localIds.contains(f.offId)).toList();
+        _local.where((f) => seen.add(key(f))).toList();
+    final commonShown =
+        _common.where((f) => seen.add(key(f))).toList();
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
@@ -410,9 +418,9 @@ class _SearchTabState extends State<_SearchTab> {
           for (final f in localShown)
             _foodTile(f, highlight: 'My food'),
         ],
-        if (_common.isNotEmpty) ...[
+        if (commonShown.isNotEmpty) ...[
           const _SectionLabel('Common foods'),
-          for (final f in _common)
+          for (final f in commonShown)
             _foodTile(f, highlight: 'Common food'),
         ],
         if (_loadingOff)
@@ -641,6 +649,7 @@ class _AiTabState extends State<_AiTab> {
       fat: g.fat * g.grams / 100,
       fiber: g.fiber * g.grams / 100,
     ));
+    HapticFeedback.selectionClick();
     AppState.instance.refresh();
     // Stay in the sheet: drop the logged guess; the rest can still be
     // logged or edited.
@@ -823,6 +832,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
     ));
     AppState.instance.refresh();
     // Stay in the sheet: reset the form for the next item.
+    HapticFeedback.selectionClick(); // confirm the add was felt, not just read
     if (!mounted) return;
     setState(() {
       for (final c in [_kcal, _protein, _carbs, _fat]) {

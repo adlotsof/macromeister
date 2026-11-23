@@ -4,6 +4,7 @@ import 'dart:io';
 
 // ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../app_state.dart';
@@ -280,6 +281,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
         photo: _photoPath,
       ));
     }
+    HapticFeedback.selectionClick();
     AppState.instance.refresh();
     // Stay in the sheet after logging; reset for the next item.
     if (!mounted) return;

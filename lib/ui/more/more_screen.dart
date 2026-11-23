@@ -24,6 +24,8 @@ class MoreScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('More')),
       body: ListView(
+        // extra bottom padding: the FAB overlays the last tiles otherwise
+        padding: const EdgeInsets.only(bottom: 96),
         children: [
           const _SectionLabel('Track'),
           ListTile(
