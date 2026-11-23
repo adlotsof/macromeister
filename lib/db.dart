@@ -426,6 +426,9 @@ class Db {
   static Future<void> updateLog(LogEntry e) async {
     if (e.id == null) return;
     final m = e.toMap()..remove('id');
+    // toMap omits a null photo (inserts don't need the column); for an
+    // UPDATE a null photo means the user REMOVED it — write it explicitly.
+    m['photo'] = e.photo;
     await (await instance)
         .update('log_entries', m, where: 'id = ?', whereArgs: [e.id]);
     hcSync(() => HealthSync.writeMealFromEntry(e));

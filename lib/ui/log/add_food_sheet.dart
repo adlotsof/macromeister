@@ -400,12 +400,13 @@ class _SearchTabState extends State<_SearchTab> {
   }
 
   Widget _results() {
-    // Dedupe across sources by normalized name+brand: the same food shows
-    // up as 'My food' (saved after the first add) AND again as
-    // 'Common food'/'Open Food Facts' — identical duplicate rows.
+    // Dedupe across sources by normalized name+brand (see
+    // dedupeFoodsByName): the same food shows up as 'My food' (saved
+    // after the first add) AND again as 'Common food'/'Open Food
+    // Facts — identical duplicate rows. First occurrence (My food) wins.
+    final seen = <String>{};
     String key(Food f) =>
         '${f.name.trim().toLowerCase()}|${f.brand.trim().toLowerCase()}';
-    final seen = <String>{};
     final localShown =
         _local.where((f) => seen.add(key(f))).toList();
     final commonShown =

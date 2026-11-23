@@ -370,6 +370,19 @@ class Recipe {
 /// as foods (per-item meal chips next to the Add button, Servings editor).
 /// Recipe macros are per serving, so servingG is 1 and the detail sheet
 /// runs in 'servings' mode (the amount IS the portion count).
+/// Dedupes a merged search-result list by normalized name+brand:
+/// the same food arrives from multiple sources ('My food' after the
+/// first add, USDA common foods, Open Food Facts) and used to render
+/// identical duplicate rows. First occurrence wins, so locally saved
+/// foods rank ahead of remote copies.
+List<Food> dedupeFoodsByName(Iterable<Food> foods) {
+  final seen = <String>{};
+  String norm(String v) =>
+      v.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  String key(Food f) => '${norm(f.name)}|${norm(f.brand)}';
+  return foods.where((f) => seen.add(key(f))).toList();
+}
+
 /// Wraps a previously-logged entry as a Food so re-adding it goes through
 /// the detail sheet (amount editable before adding). The entry's totals are
 /// normalized to per-100 g (or per-unit for zero-gram entries).
