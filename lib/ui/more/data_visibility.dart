@@ -21,8 +21,6 @@ class _VisibilityItem {
 
 class _DataVisibilityScreenState extends State<DataVisibilityScreen> {
   static final _items = [
-    _VisibilityItem('show_habits', 'Habits',
-        'Daily habit checklist card', Icons.checklist),
     _VisibilityItem('show_steps', 'Steps',
         'Step count from Health Connect', Icons.directions_walk),
     _VisibilityItem('show_period', 'Period tracking',

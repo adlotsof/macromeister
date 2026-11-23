@@ -1,4 +1,4 @@
-// Dashboard: today's energy picture, macros, weight, habits and quick actions.
+// Dashboard: today's energy picture, macros, weight and quick actions.
 import 'dart:async';
 import 'dart:io';
 
@@ -44,7 +44,6 @@ class _DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<_DashboardView> {
   static const _settingKeys = [
-    'show_habits',
     'show_steps',
     'show_period',
     'show_photos',
@@ -113,8 +112,6 @@ class _DashboardViewState extends State<_DashboardView> {
         await Db.logsBetween(from7, fmtDate(selectedDate));
 
     List<WeightEntry> weights = [];
-    List<Habit> habits = [];
-    Map<int, bool> habitsDone = {};
     List<PeriodEntry> period = [];
     List<ProgressPhoto> photos = [];
     Profile? profile;
@@ -128,13 +125,6 @@ class _DashboardViewState extends State<_DashboardView> {
     weights = await Db.weights();
     profile = await Db.loadProfile();
     lastCheckIn = await Db.lastCheckIn();
-    if (settings['show_habits']!) {
-      habits = await Db.habits();
-      for (final h in habits) {
-        final days = await Db.habitDays(h.id!);
-        habitsDone[h.id!] = days.contains(dateStr);
-      }
-    }
     if (settings['show_period']!) {
       period = await Db.periodEntries(limit: 30);
     }
@@ -171,8 +161,6 @@ class _DashboardViewState extends State<_DashboardView> {
       weights: weights,
       profile: profile,
       lastCheckIn: lastCheckIn,
-      habits: habits,
-      habitsDone: habitsDone,
       period: period,
       photos: photos,
       steps: steps,
@@ -251,13 +239,7 @@ class _DashboardViewState extends State<_DashboardView> {
                   ],
                   const SizedBox(height: 12),
                   _FastingCard(data: data, onChanged: _reload),
-                  if (data.settings['show_habits']!) ...[
-                    const SizedBox(height: 12),
-                    _HabitsCard(
-                        data: data,
-                        dateStr: fmtDate(widget.date),
-                        onChanged: _reload),
-                  ],
+
                   if (data.settings['show_period']!) ...[
                     const SizedBox(height: 12),
                     _PeriodCard(data: data, onChanged: _reload),
@@ -321,8 +303,6 @@ class _DashData {
   final List<WeightEntry> weights;
   final Profile? profile;
   final CheckIn? lastCheckIn;
-  final List<Habit> habits;
-  final Map<int, bool> habitsDone;
   final List<PeriodEntry> period;
   final List<ProgressPhoto> photos;
   final int steps;
@@ -338,8 +318,6 @@ class _DashData {
     required this.weights,
     required this.profile,
     required this.lastCheckIn,
-    required this.habits,
-    required this.habitsDone,
     required this.period,
     required this.photos,
     required this.steps,
@@ -1109,82 +1087,6 @@ class _WaterCard extends StatelessWidget {
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------- habits
-
-class _HabitsCard extends StatelessWidget {
-  final _DashData data;
-  final String dateStr;
-  final VoidCallback onChanged;
-  const _HabitsCard({required this.data, required this.dateStr, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final habits = data.habits;
-    final doneCount = data.habitsDone.values.where((v) => v).length;
-    return MtCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CardHeader('Habits',
-              icon: Icons.check_circle_outline,
-              trailing: habits.isEmpty
-                  ? null
-                  : Text('$doneCount/${habits.length} today',
-                      style: TextStyle(fontSize: 11, color: MtTheme.textDim))),
-          const SizedBox(height: 8),
-          if (habits.isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Text('No active habits. Create them in More → Habits.',
-                  style: TextStyle(fontSize: 12, color: MtTheme.textDim)),
-            )
-          else
-            for (final h in habits)
-              InkWell(
-                onTap: () async {
-                  await Db.toggleHabitDay(h.id!, dateStr);
-                  AppState.instance.refresh();
-                  onChanged();
-                },
-                borderRadius: BorderRadius.circular(10),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 9),
-                  child: Row(
-                    children: [
-                      Icon(
-                        data.habitsDone[h.id!] == true
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: data.habitsDone[h.id!] == true
-                            ? MtTheme.accent
-                            : MtTheme.textDim,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(h.name,
-                            style: TextStyle(
-                                fontSize: 14,
-                                color: data.habitsDone[h.id!] == true
-                                    ? MtTheme.text
-                                    : MtTheme.textDim)),
-                      ),
-                      if (h.type == 'log_food')
-                        Text('log a meal',
-                            style: TextStyle(fontSize: 11, color: MtTheme.textDim))
-                      else if (h.type == 'weigh_in')
-                        Text('weigh in',
-                            style: TextStyle(fontSize: 11, color: MtTheme.textDim)),
-                    ],
-                  ),
-                ),
-              ),
         ],
       ),
     );

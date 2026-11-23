@@ -1,5 +1,5 @@
 // Data export: per-area CSVs plus a full JSON backup (profile, goals, weights,
-// log, habits, recipes, workouts, settings) with import/restore.
+// log, recipes, workouts, settings) with import/restore.
 import 'dart:convert';
 import 'dart:io';
 
@@ -48,7 +48,7 @@ class DataExportScreen extends StatelessWidget {
               title: const Text('Import backup?'),
               content: const Text(
                   'Picking a backup file REPLACES all current data: profile, '
-                  'goals, food log, weights, check-ins, habits, recipes, '
+                  'goals, food log, weights, check-ins, recipes, '
                   'workouts and settings. This cannot be undone.'),
               actions: [
                 TextButton(
@@ -236,7 +236,7 @@ class DataExportScreen extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(
                   'Everything as one JSON file: profile & goals, height, '
-                  'weights, food log, check-ins, habits, recipes, '
+                  'weights, food log, check-ins, recipes, '
                   'period entries and settings.',
                   style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
               trailing: Icon(Icons.backup, color: MtTheme.accent),

@@ -12,7 +12,6 @@ import 'ai_settings.dart';
 import 'data_export.dart';
 import 'data_sources_screen.dart';
 import 'data_visibility.dart';
-import 'habits_screen.dart';
 import 'integrations.dart';
 import '../progress/progress_screen.dart';
 import 'recipes_screen.dart';
@@ -34,14 +33,6 @@ class MoreScreen extends StatelessWidget {
             trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
             onTap: () => Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const RecipesScreen())),
-          ),
-          ListTile(
-            leading: Icon(Icons.track_changes, color: MtTheme.accent),
-            title: const Text('Habits'),
-            subtitle: const Text('Create habits and build streaks'),
-            trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const HabitsScreen())),
           ),
           const _SectionLabel('Data'),
           _AutoBackupTile(),

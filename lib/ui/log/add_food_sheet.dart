@@ -11,6 +11,7 @@ import '../../app_state.dart';
 import '../../db.dart';
 import '../../models.dart';
 import '../../services/camera_permission.dart';
+import '../../services/meal_memory.dart';
 import '../../services/food_search.dart';
 import '../../services/openai.dart';
 import '../../theme.dart';
@@ -27,6 +28,12 @@ class AddFoodArgs {
 
 Future<void> showAddFoodSheet(BuildContext context, {String? date, String? meal}) async {
   final d = date ?? AppState.instance.selectedDateStr;
+  // The meal selector remembers its last state: when the caller does not
+  // request a specific meal (the generic "+" button), start from the
+  // meal the user chose last time; explicit calls (meal section headers)
+  // still win. See lib/services/meal_memory.dart.
+  final remembered = await initialMeal(explicit: meal);
+  if (!context.mounted) return;
   await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -34,7 +41,7 @@ Future<void> showAddFoodSheet(BuildContext context, {String? date, String? meal}
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => _AddFoodSheet(date: d, meal: meal ?? 'snack'),
+    builder: (_) => _AddFoodSheet(date: d, meal: remembered),
   );
 }
 
@@ -124,7 +131,10 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
   Widget _mealSelector() => PopupMenuButton<String>(
         initialValue: _meal,
         color: MtTheme.surfaceHi,
-        onSelected: (v) => setState(() => _meal = v),
+        onSelected: (v) {
+          setState(() => _meal = v);
+          rememberMeal(v);
+        },
         itemBuilder: (_) => [
           for (final m in kMeals)
             PopupMenuItem(value: m, child: Text(_cap(m))),

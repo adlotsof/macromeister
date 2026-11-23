@@ -307,23 +307,6 @@ class CheckIn {
       );
 }
 
-class Habit {
-  final int? id;
-  final String name;
-  final String type; // log_food | weigh_in | custom
-  final bool active;
-  Habit({this.id, required this.name, required this.type, this.active = true});
-
-  Map<String, Object?> toMap() =>
-      {'id': id, 'name': name, 'type': type, 'active': active ? 1 : 0};
-  static Habit fromMap(Map<String, Object?> m) => Habit(
-        id: m['id'] as int?,
-        name: (m['name'] ?? '') as String,
-        type: (m['type'] ?? 'custom') as String,
-        active: (m['active'] as int? ?? 1) == 1,
-      );
-}
-
 class Recipe {
   final int? id;
   final String name;

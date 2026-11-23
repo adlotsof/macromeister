@@ -1,5 +1,5 @@
 // Full backup/restore: every MacroTrack table (profile, goals, food log,
-// weights, check-ins, habits, recipes, workouts, period entries, photo
+// weights, check-ins, recipes, workouts, period entries, photo
 // metadata, settings) as a single JSON file, shared via the system sheet.
 // Import restores a backup file, replacing current data.
 import 'dart:convert';
@@ -21,9 +21,7 @@ class Backup {
     'log_entries',
     'weights',
     'checkins',
-    'habits',
-    'habit_days',
-    'recipes',
+        'recipes',
     'workout_programs',
     'workout_sessions',
     'period_entries',

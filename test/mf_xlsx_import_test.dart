@@ -116,11 +116,14 @@ Uint8List _buildMfWorkbook(String path) {
           ['Height (cm)', 178],
           ['Activity Level', 'Moderate'],
         ]));
+    // Fat Percent included: the weights table on a FRESH install (onCreate,
+    // no upgrade path) used to lack fat_percent and the import crashed with
+    // "table weights has no column named fat_percent".
     add('xl/worksheets/sheet2.xml',
         _sheetXml([
-          ['Date', 'Weight (kg)'],
-          [DateTime(2026, 11, 1), 84.4],
-          [DateTime(2026, 11, 8), 83.9],
+          ['Date', 'Weight (kg)', 'Fat Percent'],
+          [DateTime(2026, 11, 1), 84.4, 22.5],
+          [DateTime(2026, 11, 8), 83.9, 22.1],
         ]));
     add('xl/worksheets/sheet3.xml',
         _sheetXml([
@@ -184,6 +187,10 @@ void main() {
     _buildMfWorkbook(tmp);
     final r = await MfXlsx.importFile(tmp);
     expect(r.weights, 2); // Scale Weight rows
+    final storedWeights = await Db.weights();
+    expect(storedWeights.length, 2);
+    expect(storedWeights.first.fatPercent, 22.5,
+        reason: 'fresh-install weights table must carry fat_percent');
     expect(r.loggedDays, 1); // Calories & Macros rows
     expect(r.customFoods, 1);
     expect(r.recipes, 1);

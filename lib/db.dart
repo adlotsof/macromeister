@@ -208,7 +208,7 @@ class Db {
     final dir = await getDatabasesPath();
     final db = await openDatabase(
         p.join(dir, dbPathOverride ?? 'macrotrack.db'),
-        version: 4,
+        version: 5,
         onUpgrade: (db, from, to) async {
       if (from < 2) {
         // MacroFactor body-metrics import carries body-fat %; add the column.
@@ -223,6 +223,19 @@ class Db {
         // Micronutrients stored as JSON blobs (see lib/micros.dart).
         await db.execute('ALTER TABLE foods ADD COLUMN micros TEXT');
         await db.execute('ALTER TABLE log_entries ADD COLUMN micros TEXT');
+      }
+      if (from < 5) {
+        // Habits feature removed.
+        await db.execute('DROP TABLE IF EXISTS habits');
+        await db.execute('DROP TABLE IF EXISTS habit_days');
+        // Existing installs that were CREATED at v4 have a weights table
+        // without fat_percent (the column only existed via the from<2
+        // upgrade and the fresh v5 onCreate) — the MacroFactor import
+        // crashed on them. Idempotent via try/catch: fresh v5 databases
+        // never take this path, and v1-upgraded ones already have it.
+        try {
+          await db.execute('ALTER TABLE weights ADD COLUMN fat_percent REAL');
+        } catch (_) {}
       }
     },
         onCreate: (db, v) async {
@@ -251,7 +264,8 @@ class Db {
           'CREATE INDEX log_date ON log_entries(date, meal)');
       await db.execute('''
         CREATE TABLE weights(
-          id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT UNIQUE, weight_kg REAL
+          id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT UNIQUE,
+          weight_kg REAL, fat_percent REAL
         )''');
       await db.execute('''
         CREATE TABLE checkins(
@@ -259,12 +273,6 @@ class Db {
           weight_kg REAL, kcal_avg_7d REAL, expenditure REAL,
           daily_target REAL, notes TEXT
         )''');
-      await db.execute('''
-        CREATE TABLE habits(
-          id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, active INTEGER
-        )''');
-      await db.execute(
-          'CREATE TABLE habit_days(habit_id INTEGER, date TEXT, UNIQUE(habit_id, date))');
       await db.execute('''
         CREATE TABLE recipes(
           id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, servings INTEGER,
@@ -422,40 +430,6 @@ class Db {
     final rows =
         await (await instance).query('checkins', orderBy: 'date DESC');
     return rows.map(CheckIn.fromMap).toList();
-  }
-
-  // ---- habits ----
-  static Future<int> upsertHabit(Habit h) async =>
-      (await instance).insert('habits', h.toMap());
-
-  static Future<List<Habit>> habits() async {
-    final rows = await (await instance)
-        .query('habits', where: 'active = 1', orderBy: 'id');
-    return rows.map(Habit.fromMap).toList();
-  }
-
-  static Future<void> deleteHabit(int id) async =>
-      (await instance).delete('habits', where: 'id = ?', whereArgs: [id]);
-
-  /// Marks/unmarks a habit done on a date. Returns the new done-state.
-  static Future<bool> toggleHabitDay(int habitId, String date) async {
-    final db = await instance;
-    final rows = await db.query('habit_days',
-        where: 'habit_id = ? AND date = ?', whereArgs: [habitId, date]);
-    if (rows.isEmpty) {
-      await db.insert('habit_days', {'habit_id': habitId, 'date': date});
-      return true;
-    }
-    await db.delete('habit_days',
-        where: 'habit_id = ? AND date = ?', whereArgs: [habitId, date]);
-    return false;
-  }
-
-  /// Set of dates (yyyy-MM-dd) the habit was done, ascending.
-  static Future<List<String>> habitDays(int habitId) async {
-    final rows = await (await instance).query('habit_days',
-        where: 'habit_id = ?', whereArgs: [habitId], orderBy: 'date');
-    return rows.map((r) => r['date'] as String).toList();
   }
 
   // ---- recipes ----

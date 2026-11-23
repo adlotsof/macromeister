@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../app_state.dart';
 import '../../db.dart';
+import '../../services/meal_memory.dart';
 import '../../models.dart';
 import '../../theme.dart';
 
@@ -218,7 +219,10 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
                         fontWeight:
                             _meal == m ? FontWeight.w700 : FontWeight.w400),
                     showCheckmark: false,
-                    onSelected: (_) => setState(() => _meal = m),
+                    onSelected: (_) {
+                      setState(() => _meal = m);
+                      rememberMeal(m);
+                    },
                   ),
               ],
             ),
