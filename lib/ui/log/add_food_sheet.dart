@@ -12,6 +12,7 @@ import '../../db.dart';
 import '../../models.dart';
 import '../../services/camera_permission.dart';
 import '../../services/meal_memory.dart';
+import 'meal_picker.dart';
 import '../../services/food_search.dart';
 import '../../services/openai.dart';
 import '../../theme.dart';
@@ -57,7 +58,7 @@ enum _Tab { search, ai, quick, custom, recipe }
 
 class _AddFoodSheetState extends State<_AddFoodSheet> {
   _Tab _tab = _Tab.search;
-  String _meal = 'snack';
+  String _meal = 'snack'; // initial meal for tabs; picker lives per-tab
 
   @override
   void initState() {
@@ -84,7 +85,6 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.w700)),
                   ),
-                  _mealSelector(),
                   IconButton(
                     icon: Icon(Icons.close, color: MtTheme.textDim),
                     onPressed: () => Navigator.of(context).pop(),
@@ -128,30 +128,6 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
     );
   }
 
-  Widget _mealSelector() => PopupMenuButton<String>(
-        initialValue: _meal,
-        color: MtTheme.surfaceHi,
-        onSelected: (v) {
-          setState(() => _meal = v);
-          rememberMeal(v);
-        },
-        itemBuilder: (_) => [
-          for (final m in kMeals)
-            PopupMenuItem(value: m, child: Text(_cap(m))),
-        ],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(_cap(_meal),
-                  style: TextStyle(
-                      color: MtTheme.accent, fontWeight: FontWeight.w600)),
-              Icon(Icons.arrow_drop_down, color: MtTheme.accent),
-            ],
-          ),
-        ),
-      );
 
   Widget _tabChip(_Tab t, String label, IconData icon) => ChoiceChip(
         label: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -171,8 +147,6 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
       );
 }
 
-String _cap(String s) =>
-    s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 
 // ---------------------------------------------------------------- search tab
 
@@ -556,14 +530,23 @@ String _fmtG(double g) =>
 
 class _AiTab extends StatefulWidget {
   final String date;
-  final String meal;
+  final String meal; // initial meal (remembered)
   const _AiTab({required this.date, required this.meal});
   @override
   State<_AiTab> createState() => _AiTabState();
 }
 
 class _AiTabState extends State<_AiTab> {
+  // Selected via the MealPicker next to the estimate action; initialized
+  // from the remembered meal the sheet was opened with.
+  String _meal = 'snack';
   final _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _meal = widget.meal;
+  }
   bool _loading = false;
   List<AiFoodGuess> _guesses = [];
   String? _error;
@@ -677,7 +660,7 @@ class _AiTabState extends State<_AiTab> {
   Future<void> _logGuess(AiFoodGuess g, {bool pop = true}) async {
     await Db.insertLog(LogEntry(
       date: widget.date,
-      meal: widget.meal,
+      meal: _meal,
       name: g.name,
       grams: g.grams,
       kcal: g.kcal * g.grams / 100,
@@ -816,6 +799,7 @@ class _QuickAddTab extends StatefulWidget {
 }
 
 class _QuickAddTabState extends State<_QuickAddTab> {
+  late String _meal = widget.meal;
   final _kcal = TextEditingController();
   final _protein = TextEditingController();
   final _carbs = TextEditingController();
@@ -847,7 +831,7 @@ class _QuickAddTabState extends State<_QuickAddTab> {
     }
     await Db.insertLog(LogEntry(
       date: widget.date,
-      meal: widget.meal,
+      meal: _meal,
       name: _fasted ? 'Fasted' : 'Quick add',
       grams: 0,
       kcal: _fasted ? 0 : kcal,
@@ -881,6 +865,8 @@ class _QuickAddTabState extends State<_QuickAddTab> {
           Expanded(child: _numField(_fat, 'Fat', suffix: 'g',
               keyboardType: const TextInputType.numberWithOptions(decimal: true))),
         ]),
+        const SizedBox(height: 8),
+        MealPicker(initial: widget.meal, onChanged: (m) => _meal = m),
         const SizedBox(height: 8),
         SwitchListTile(
           value: _fasted,
@@ -956,71 +942,20 @@ class _RecipeTabState extends State<_RecipeTab> {
     }
   }
 
+  // Recipes log through the SAME flow as foods: the detail sheet with the
+  // per-item meal chips next to the Add button and a Servings editor.
   Future<void> _logRecipe(Recipe r) async {
-    final servings = await _pickServings(r.servings);
-    if (servings == null) return;
-    final mult = servings / r.servings;
-    await Db.insertLog(LogEntry(
-      date: widget.date,
-      meal: widget.meal,
-      name: r.name,
-      brand: 'Recipe',
-      grams: 0,
-      kcal: r.kcal * mult,
-      protein: r.protein * mult,
-      carbs: r.carbs * mult,
-      fat: r.fat * mult,
-      fiber: 0,
-    ));
-    AppState.instance.refresh();
-    if (mounted) Navigator.of(context).pop();
+    // Recipe macros are stored per serving; the sheet scales them by the
+    // logged portion count.
+    final f = recipePerServingFood(r);
+    await openFoodDetailSheet(context, f,
+        date: widget.date,
+        meal: widget.meal,
+        unitLabel: 'servings',
+        brandOverride: 'Recipe');
+    if (mounted) _load();
   }
 
-  Future<int?> _pickServings(int current) async {
-    final c = TextEditingController(text: current.toString());
-    try {
-      final result = await showDialog<int>(
-        context: context,
-        builder: (context) {
-          String? error;
-          return StatefulBuilder(builder: (context, setD) {
-            return AlertDialog(
-              backgroundColor: MtTheme.surface,
-              title: const Text('Servings'),
-              content: Column(mainAxisSize: MainAxisSize.min, children: [
-                TextField(
-                  controller: c,
-                  autofocus: true,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                      labelText: 'Servings to log',
-                      errorText: error),
-                ),
-              ]),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cancel')),
-                FilledButton(
-                    onPressed: () {
-                      final v = int.tryParse(c.text.trim());
-                      if (v == null || v < 1 || v > 50) {
-                        setD(() => error = 'Enter a serving count of 1-50.');
-                        return;
-                      }
-                      Navigator.pop(context, v);
-                    },
-                    child: const Text('Log')),
-              ],
-            );
-          });
-        },
-      );
-      return result;
-    } finally {
-      c.dispose();
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

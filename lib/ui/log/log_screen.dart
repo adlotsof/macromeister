@@ -1,5 +1,7 @@
 // Daily food log: date navigation, per-meal sections with entries,
 // day totals vs targets, swipe to delete.
+import 'dart:io';
+
 // ignore: deprecated_member_use -- replacement package:material_ui is not published yet
 import 'package:flutter/material.dart';
 
@@ -449,6 +451,14 @@ class _EntryTile extends StatelessWidget {
       child: ListTile(
         dense: true,
         onTap: () => showEditEntrySheet(context, entry),
+        leading: entry.photo != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Image.file(File(entry.photo!),
+                    width: 40, height: 40, fit: BoxFit.cover,
+                    errorBuilder: (c, e, st) =>
+                        const SizedBox(width: 40, height: 40)))
+            : null,
         title: Row(
           children: [
             Expanded(

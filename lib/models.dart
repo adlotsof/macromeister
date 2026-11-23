@@ -82,6 +82,7 @@ class LogEntry {
   final double kcal, protein, carbs, fat, fiber; // absolute for this entry
   final Map<String, double> micros; // absolute for this entry; keys = Micros ids
   final bool fasted; // zero-calorie day marker support
+  final String? photo; // optional meal-photo path (custom foods etc.)
   final String? createdAt;
 
   LogEntry({
@@ -99,6 +100,7 @@ class LogEntry {
     this.fiber = 0,
     this.micros = const {},
     this.fasted = false,
+    this.photo,
     this.createdAt,
   });
 
@@ -117,6 +119,7 @@ class LogEntry {
         'fiber': fiber,
         'micros': micros.isEmpty ? null : Micros.encode(micros),
         'fasted': fasted ? 1 : 0,
+        if (photo != null) 'photo': photo,
         'created_at': createdAt,
       };
 
@@ -135,6 +138,7 @@ class LogEntry {
         fiber: (m['fiber'] as num?)?.toDouble() ?? 0,
         micros: Micros.decode(m['micros'] as String?),
         fasted: (m['fasted'] as int? ?? 0) == 1,
+        photo: m['photo'] as String?,
         createdAt: m['created_at'] as String?,
       );
 }
@@ -361,6 +365,23 @@ class Recipe {
         steps: m['steps'] as String?,
       );
 }
+
+/// Wraps a recipe as a Food so it logs through the SAME detail-sheet flow
+/// as foods (per-item meal chips next to the Add button, Servings editor).
+/// Recipe macros are per serving, so servingG is 1 and the detail sheet
+/// runs in 'servings' mode (the amount IS the portion count).
+Food recipePerServingFood(Recipe r) => Food(
+      name: r.name,
+      brand: '',
+      servingG: 1,
+      kcal: r.kcal,
+      protein: r.protein,
+      carbs: r.carbs,
+      fat: r.fat,
+      fiber: 0,
+      source: 'recipe',
+    );
+
 
 class WorkoutProgram {
   final int? id;

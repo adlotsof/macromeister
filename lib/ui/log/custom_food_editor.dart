@@ -13,6 +13,7 @@ import '../../models.dart';
 import '../../services/camera_permission.dart';
 import '../../services/openai.dart';
 import '../../theme.dart';
+import 'meal_picker.dart';
 
 String _cap(String s) =>
     s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
@@ -43,6 +44,8 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
   bool _microsExpanded = false;
   bool _aiLoading = false;
   bool _deleting = false;
+  late String _meal = widget.meal;
+  String? _photoPath; // optional meal photo attached to the logged entry
   String? _error; // inline error — snackbars hide behind the modal barrier
 
   @override
@@ -212,6 +215,21 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
             e.key: double.parse(e.value.text.replaceAll(',', '.')),
       };
 
+  Future<void> _attachPhoto() async {
+    try {
+      final x = await ImagePicker().pickImage(
+          source: ImageSource.camera,
+          maxWidth: 1200,
+          imageQuality: 80,
+        );
+      final picked = x ?? await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked == null) return;
+      if (mounted) setState(() => _photoPath = picked.path);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Could not attach photo');
+    }
+  }
+
   Future<void> _save({required bool alsoLog}) async {
     final name = _name.text.trim();
     if (name.isEmpty) {
@@ -240,7 +258,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
       final g = serving;
       await Db.insertLog(LogEntry(
         date: widget.date,
-        meal: widget.meal,
+        meal: _meal,
         foodId: id,
         name: food.name,
         brand: food.brand,
@@ -251,6 +269,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
         fat: food.fat * g / 100,
         fiber: food.fiber * g / 100,
         micros: food.microsFor(g),
+        photo: _photoPath,
       ));
     }
     AppState.instance.refresh();
@@ -406,10 +425,35 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
           ],
         ),
         const SizedBox(height: 20),
+        // Per-item meal selection (next to the Add button, same as foods).
+        MealPicker(initial: widget.meal, onChanged: (m) => _meal = m),
+        const SizedBox(height: 14),
+        // Optional meal photo — attached to the log entry.
+        Row(children: [
+          OutlinedButton.icon(
+            onPressed: _attachPhoto,
+            icon: const Icon(Icons.photo_camera, size: 18),
+            label: const Text('Add photo'),
+          ),
+          if (_photoPath != null) ...[
+            const SizedBox(width: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(File(_photoPath!),
+                  width: 44, height: 44, fit: BoxFit.cover),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              color: MtTheme.textDim,
+              onPressed: () => setState(() => _photoPath = null),
+            ),
+          ],
+        ]),
+        const SizedBox(height: 8),
         FilledButton.icon(
           onPressed: () => _save(alsoLog: true),
           icon: const Icon(Icons.add_circle, size: 18),
-          label: Text('Save & add to ${_cap(widget.meal)}'),
+          label: Text('Save & add to ${_cap(_meal)}'),
         ),
         const SizedBox(height: 8),
         OutlinedButton(

@@ -262,7 +262,7 @@ class Db {
     final dir = await getDatabasesPath();
     final db = await openDatabase(
         p.join(dir, dbPathOverride ?? 'macrotrack.db'),
-        version: 5,
+        version: 6,
         onUpgrade: (db, from, to) async {
       if (from < 2) {
         // MacroFactor body-metrics import carries body-fat %; add the column.
@@ -277,6 +277,12 @@ class Db {
         // Micronutrients stored as JSON blobs (see lib/micros.dart).
         await db.execute('ALTER TABLE foods ADD COLUMN micros TEXT');
         await db.execute('ALTER TABLE log_entries ADD COLUMN micros TEXT');
+      }
+      if (from < 6) {
+        // Meal photos on log entries (custom foods etc.).
+        try {
+          await db.execute('ALTER TABLE log_entries ADD COLUMN photo TEXT');
+        } catch (_) {}
       }
       if (from < 5) {
         // Habits feature removed.
@@ -312,7 +318,7 @@ class Db {
           id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, meal TEXT,
           food_id INTEGER, name TEXT, brand TEXT, grams REAL, kcal REAL,
           protein REAL, carbs REAL, fat REAL, fiber REAL, micros TEXT,
-          fasted INTEGER DEFAULT 0, created_at TEXT
+          fasted INTEGER DEFAULT 0, photo TEXT, created_at TEXT
         )''');
       await db.execute(
           'CREATE INDEX log_date ON log_entries(date, meal)');

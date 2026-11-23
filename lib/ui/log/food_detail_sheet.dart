@@ -12,7 +12,10 @@ String _cap(String s) =>
     s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 
 Future<void> openFoodDetailSheet(BuildContext context, Food food,
-    {required String date, required String meal}) async {
+    {required String date,
+    required String meal,
+    String unitLabel = 'g',
+    String? brandOverride}) async {
   await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -20,7 +23,12 @@ Future<void> openFoodDetailSheet(BuildContext context, Food food,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (_) => _FoodDetailSheet(food: food, date: date, meal: meal),
+    builder: (_) => _FoodDetailSheet(
+        food: food,
+        date: date,
+        meal: meal,
+        unitLabel: unitLabel,
+        brandOverride: brandOverride),
   );
 }
 
@@ -28,7 +36,17 @@ class _FoodDetailSheet extends StatefulWidget {
   final Food food;
   final String date;
   final String meal;
-  const _FoodDetailSheet({required this.food, required this.date, required this.meal});
+
+  /// 'g' for foods (macros per 100 g), 'servings' for recipes (macros per
+  /// serving — the value IS the portion count).
+  final String unitLabel;
+  final String? brandOverride;
+  const _FoodDetailSheet(
+      {required this.food,
+      required this.date,
+      required this.meal,
+      this.unitLabel = 'g',
+      this.brandOverride});
   @override
   State<_FoodDetailSheet> createState() => _FoodDetailSheetState();
 }
@@ -47,9 +65,13 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
   void initState() {
     super.initState();
     _meal = widget.meal;
-    final s = widget.food.servingG;
-    _grams = TextEditingController(
-        text: s == s.roundToDouble() ? s.round().toString() : s.toStringAsFixed(1));
+    if (widget.unitLabel == 'servings') {
+      _grams = TextEditingController(text: '1');
+    } else {
+      final s = widget.food.servingG;
+      _grams = TextEditingController(
+          text: s == s.roundToDouble() ? s.round().toString() : s.toStringAsFixed(1));
+    }
     _grams.addListener(() => setState(() {}));
   }
 
@@ -59,7 +81,10 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
     super.dispose();
   }
 
-  double _for100(double per100) => per100 * _gramsValue / 100;
+  double _for100(double per100) =>
+      widget.unitLabel == 'servings'
+          ? per100 * _gramsValue // per-serving values
+          : per100 * _gramsValue / 100;
 
   Future<void> _log() async {
     final g = _gramsValue;
@@ -88,7 +113,9 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
       return;
     }
     // Save non-custom foods locally so they show up in search later.
-    if (widget.food.source != 'custom') {
+    // Recipes are derived values (per-serving) — never stored as foods.
+    if (widget.food.source != 'custom' &&
+        widget.food.source != 'recipe') {
       await Db.upsertFood(widget.food);
     }
     await Db.insertLog(LogEntry(
@@ -139,10 +166,10 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
                 ),
               ],
             ),
-            if (f.brand.isNotEmpty)
+            if ((widget.brandOverride ?? f.brand).isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
-                child: Text(f.brand,
+                child: Text(widget.brandOverride ?? f.brand,
                     style: TextStyle(color: MtTheme.textDim, fontSize: 13)),
               ),
             const SizedBox(height: 8),
@@ -173,13 +200,17 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
                     controller: _grams,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'Amount (grams)',
-                      suffixText: 'g',
+                      labelText: widget.unitLabel == 'servings'
+                          ? 'Servings'
+                          : 'Amount (grams)',
+                      suffixText: widget.unitLabel == 'servings' ? '' : 'g',
                     ),
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (f.servingG > 0 && f.servingG != 100)
+                if (widget.unitLabel != 'servings' &&
+                    f.servingG > 0 &&
+                    f.servingG != 100)
                   OutlinedButton(
                     onPressed: () => _grams.text = _gStr(f.servingG),
                     style: OutlinedButton.styleFrom(
