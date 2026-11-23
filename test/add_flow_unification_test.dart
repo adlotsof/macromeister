@@ -50,6 +50,50 @@ void main() {
     });
   });
 
+  group('re-adding a previously-logged food', () {
+    // Tapping a previously-logged entry used to re-log it instantly with
+    // the same amount; now it opens the detail sheet so the serving can
+    // be adjusted before adding.
+    test('loggedEntryAsFood normalizes totals to per-100 g', () {
+      final e = LogEntry(
+          date: '2026-11-23',
+          meal: 'lunch',
+          name: 'Banana',
+          brand: 'My food',
+          grams: 200,
+          kcal: 300,
+          protein: 20,
+          carbs: 60,
+          fat: 10,
+          fiber: 4);
+      final f = loggedEntryAsFood(e);
+      expect(f.servingG, 200, reason: 'prefills the previously-logged amount');
+      expect(f.kcal, 150); // 300 kcal per 200 g -> 150 per 100 g
+      expect(f.protein, 10);
+      expect(f.carbs, 30);
+      expect(f.fat, 5);
+      expect(f.fiber, 2);
+      expect(f.brand, 'My food');
+    });
+
+    test('detail-sheet math: re-adding a different amount scales correctly',
+        () {
+      final f = loggedEntryAsFood(LogEntry(
+          date: '2026-11-23',
+          meal: 'lunch',
+          name: 'Banana',
+          grams: 200,
+          kcal: 300,
+          protein: 20,
+          carbs: 60,
+          fat: 10,
+          fiber: 4));
+      // the sheet computes absolute values as per100 * grams / 100
+      expect(f.kcal * 400 / 100, 600, reason: 'double the amount = double kcal');
+      expect(f.kcal * 100 / 100, 150, reason: 'half the amount = half kcal');
+    });
+  });
+
   group('log entry meal photo', () {
     setUp(() async {
       Db.dbPathOverride = 'macrotrack_photo_entry_test.db';

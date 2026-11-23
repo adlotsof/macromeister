@@ -347,16 +347,11 @@ class _SearchTabState extends State<_SearchTab> {
                           );
                           return;
                         }
-                        _logQuick(
-                          name: l.name,
-                          brand: l.brand,
-                          grams: l.grams,
-                          kcal: l.kcal / l.grams * 100,
-                          protein: l.protein / l.grams * 100,
-                          carbs: l.carbs / l.grams * 100,
-                          fat: l.fat / l.grams * 100,
-                          fiber: l.fiber / l.grams * 100,
-                        );
+                        // Previously-logged food: open the detail sheet
+                        // prefilled with the logged amount so the serving
+                        // can be adjusted before re-adding.
+                        openFoodDetailSheet(context, loggedEntryAsFood(l),
+                            date: widget.date, meal: widget.meal);
                       },
                     ),
                 ],
@@ -459,27 +454,6 @@ class _SearchTabState extends State<_SearchTab> {
         onTap: () => openFoodDetailSheet(context, f, date: widget.date, meal: widget.meal),
       );
 
-  Future<void> _logQuick({
-    required String name,
-    required String brand,
-    required double grams,
-    required double kcal, // per 100g
-    required double protein,
-    required double carbs,
-    required double fat,
-    required double fiber,
-  }) async {
-    await _insert(
-      name: name,
-      brand: brand,
-      grams: grams,
-      kcal: kcal * grams / 100,
-      protein: protein * grams / 100,
-      carbs: carbs * grams / 100,
-      fat: fat * grams / 100,
-      fiber: fiber * grams / 100,
-    );
-  }
 
   Future<void> _insert({
     required String name,

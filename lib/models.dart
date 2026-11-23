@@ -370,6 +370,21 @@ class Recipe {
 /// as foods (per-item meal chips next to the Add button, Servings editor).
 /// Recipe macros are per serving, so servingG is 1 and the detail sheet
 /// runs in 'servings' mode (the amount IS the portion count).
+/// Wraps a previously-logged entry as a Food so re-adding it goes through
+/// the detail sheet (amount editable before adding). The entry's totals are
+/// normalized to per-100 g (or per-unit for zero-gram entries).
+Food loggedEntryAsFood(LogEntry l) => Food(
+      name: l.name,
+      brand: l.brand,
+      servingG: l.grams > 0 ? l.grams : 1,
+      kcal: l.grams > 0 ? l.kcal / l.grams * 100 : l.kcal,
+      protein: l.grams > 0 ? l.protein / l.grams * 100 : l.protein,
+      carbs: l.grams > 0 ? l.carbs / l.grams * 100 : l.carbs,
+      fat: l.grams > 0 ? l.fat / l.grams * 100 : l.fat,
+      fiber: l.grams > 0 ? l.fiber / l.grams * 100 : l.fiber,
+      source: 'logged',
+    );
+
 Food recipePerServingFood(Recipe r) => Food(
       name: r.name,
       brand: '',
