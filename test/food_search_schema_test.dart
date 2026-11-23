@@ -56,8 +56,8 @@ void main() {
     final dir = await getDatabasesPath();
     // Remove seeds + markers so each test starts clean.
     for (final name in [
-      'foods_off.db', 'foods_off.db.v4',
-      'foods_common.db', 'foods_common.db.v2',
+      'foods_off.db', 'foods_off.db.v5',
+      'foods_common.db', 'foods_common.db.v3',
     ]) {
       final f = File(p.join(dir, name));
       if (f.existsSync()) f.deleteSync();
@@ -65,7 +65,7 @@ void main() {
   });
 
   test('searchOffLocal works on the OLD schema (no micros column)', () async {
-    await _seed('foods_off.db', 'foods_off.db.v4', _oldFoods, [
+    await _seed('foods_off.db', 'foods_off.db.v5', _oldFoods, [
       ['1', 'Banana raw', '', 'usda', 120, 105.0, 1.3, 27.0, 0.4, 3.1],
       ['2', 'Lidl Mozzarella light', 'Lidl', 'de', 100, 254.0, 19.0, 2.0, 19.0, 0.0],
     ]);
@@ -80,7 +80,7 @@ void main() {
 
   test('searchOffLocal works on the NEW schema (micros column present)',
       () async {
-    await _seed('foods_off.db', 'foods_off.db.v4', _newFoods, [
+    await _seed('foods_off.db', 'foods_off.db.v5', _newFoods, [
       ['1', 'Banana raw', '', 'usda', 120, 105.0, 1.3, 27.0, 0.4, 3.1,
        '{"potassium_mg":358}'],
     ]);
@@ -91,7 +91,7 @@ void main() {
   });
 
   test('searchCommonLocal works on the OLD schema', () async {
-    await _seed('foods_common.db', 'foods_common.db.v2', _oldFoods, [
+    await _seed('foods_common.db', 'foods_common.db.v3', _oldFoods, [
       ['usda-1', 'Chicken breast grilled', '', 'usda', 100, 165.0, 31.0, 0.0, 3.6, 0.0],
     ]);
     final res = await Db.searchCommonLocal('chicken');

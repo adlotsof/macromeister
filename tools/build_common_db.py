@@ -179,6 +179,18 @@ def main():
             "INSERT OR REPLACE INTO foods VALUES (?,?,?,?,?,?,?,?,?,?,?)",
             batch[i:i + 5000])
     db.commit()
+    # FTS5 search index over name+brand: the app's food search uses this
+    # instead of full-table LIKE scans (4.57M rows). contentless=False:
+    # external-content table mapped by rowid, populated once here.
+    db.execute("DROP TABLE IF EXISTS foods_fts")
+    db.execute(
+        # fts4 (not fts5): Android's system sqlite often lacks the fts5
+        # module; fts4 with external content is available everywhere.
+        "CREATE VIRTUAL TABLE foods_fts USING fts4(name, brand, "
+        "content=foods)")
+    db.execute(
+        "INSERT INTO foods_fts(foods_fts) VALUES ('rebuild')")
+    db.commit()
     db.execute("VACUUM")
     db.close()
     print(f"DONE: fndds={n_added} sr_fallback={n_sr} total={len(rows)} "

@@ -205,15 +205,19 @@ class _SearchTabState extends State<_SearchTab> {
 
   void _onChanged(String q) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 350), () => _search(q));
+    _debounce = Timer(const Duration(milliseconds: 250), () => _search(q));
   }
+
+  String _searchedFor = '';
 
   Future<void> _search(String q) async {
     final trimmed = q.trim();
     if (trimmed.isEmpty) {
+      _searchedFor = '';
       if (mounted) {
         setState(() {
           _local = [];
+          _common = [];
           _off = [];
           _offCount = 0;
           _loadingOff = false;
@@ -221,17 +225,35 @@ class _SearchTabState extends State<_SearchTab> {
       }
       return;
     }
-    final local = await Db.searchLocalFoods(trimmed);
-    if (mounted) setState(() => _local = local);
-    // Bundled USDA common foods (barcode-less whole foods) — shown first.
-    final common = await Db.searchCommonLocal(trimmed);
-    if (mounted) setState(() => _common = common);
-    // Bundled full OFF database (4.57M foods) — searched first, offline.
-    final offLocal = await Db.searchOffLocal(trimmed);
-    if (mounted) setState(() => _off = offLocal);
+    _searchedFor = trimmed;
+    // Bundled databases (local user foods, USDA common foods, full OFF
+    // database) searched CONCURRENTLY — sequentially this tripled the
+    // time-to-first-result. Each result is applied as soon as it arrives.
+    final localF = Db.searchLocalFoods(trimmed);
+    final commonF = Db.searchCommonLocal(trimmed);
+    final offLocalF = Db.searchOffLocal(trimmed);
+    final local = await localF;
+    if (!mounted || _searchedFor != trimmed) return;
+    setState(() => _local = local);
+    final common = await commonF;
+    if (!mounted || _searchedFor != trimmed) return;
+    setState(() => _common = common);
+    final offLocal = await offLocalF;
+    if (!mounted || _searchedFor != trimmed) return;
+    setState(() {
+      _off = offLocal;
+      _offCount = offLocal.length;
+    });
+    // Remote Open Food Facts: only from 3 characters on — shorter queries
+    // return noise and just delay the fresher remote results of a longer
+    // query (MacroFactor gates remote search the same way).
+    if (trimmed.length < 3) {
+      _scanned = true;
+      return;
+    }
     if (mounted) setState(() => _loadingOff = true);
     final res = await searchOff(trimmed);
-    if (!mounted) return;
+    if (!mounted || _searchedFor != trimmed) return;
     // Merge: online results first (freshest), then local-only rows not
     // already present (dedupe by barcode).
     final seen = res.foods.map((f) => f.offId).toSet();

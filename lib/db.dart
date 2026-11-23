@@ -27,7 +27,7 @@ class Db {
   /// packaged products OFF covers).
   /// Copied out of the APK on first use, same crash-safe native streaming as
   /// the big OFF database.
-  static const int _commonDbVersion = 2;
+  static const int _commonDbVersion = 3;
   static Future<Database> commonDb() async {
     if (_commonDb != null) return _commonDb!;
     final dir = await getDatabasesPath();
@@ -54,25 +54,88 @@ class Db {
     return _commonDb!;
   }
 
-  /// Shared token-based search over a foods table (used for both the OFF
-  /// database and the USDA common-foods database).
-  static Future<List<Map<String, Object?>>> _tokenSearch(
+  /// Builds an FTS5 MATCH query for the search tokens: implicit AND across
+  /// tokens, prefix match on the last token ("lidl mozz" -> lidl mozz*).
+  static String ftsMatchQuery(String q) {
+    final tokens = q
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .map((t) => t.replaceAll(RegExp(r'["*()]'), ''))
+        .where((t) => t.isNotEmpty)
+        .toList();
+    if (tokens.isEmpty) return '';
+    final last = tokens.removeLast();
+    return [...tokens, '$last*'].join(' ');
+  }
+
+  /// Whether [db] carries the FTS search index (bundled DBs built with
+  /// tools/build_*_db.py) and which flavor: 'fts4' (Android's system
+  /// sqlite, used by the production builders) or 'fts5' (desktop/test
+  /// sqlite, which typically ships fts5 only). No index -> null (LIKE).
+  static Future<String?> _ftsFlavor(Database db) async {
+    final rows = await db.rawQuery(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND "
+        "name='foods_fts'");
+    if (rows.isEmpty) return null;
+    return ((rows.first['sql'] as String?) ?? '').contains('fts5')
+        ? 'fts5'
+        : 'fts4';
+  }
+
+  /// Public for regression tests; production callers are the (USDA common foods and
+  /// the full OFF database).
+  ///
+  /// Fast path: FTS5 index (see the DB builders) - prefix + boolean token
+  /// matching instead of full-table LIKE scans over 4.57M rows, which made
+  /// search slow. Accuracy: FTS bm25 relevance inside the tiers that matter
+  /// for food logging (real nutrition data first, brand hits next).
+  /// Slow path: the previous LIKE implementation, for databases installed
+  /// before the index existed.
+  static Future<List<Map<String, Object?>>> tokenSearch(
       Database db, String q) async {
     final esc = q.replaceAll('%', '').replaceAll('_', '').trim();
     final tokens = esc.split(RegExp(r'\s+')).where((t) => t.length >= 2).toList();
     if (tokens.isEmpty) {
       tokens.add(esc);
     }
+    final cols = 'code, name, brand, country, serving_g, kcal, protein, '
+        'carbs, fat, fiber';
+    final colsMicros = '$cols, micros';
+
+    final flavor = await _ftsFlavor(db);
+    if (flavor != null) {
+      final match = ftsMatchQuery(esc);
+      if (match.isEmpty) return [];
+      final prefix = match.replaceAll(' *', '').replaceAll('*', '');
+      // fts4 exposes the docid alias; fts5 maps via rowid.
+      final joinCol = flavor == 'fts4' ? 'docid' : 'rowid';
+      final sql =
+          "SELECT f.code, f.name, f.brand, f.country, f.serving_g, f.kcal, "
+          "f.protein, f.carbs, f.fat, f.fiber, f.micros FROM foods f "
+          "JOIN foods_fts t ON f.rowid = t.$joinCol "
+          "WHERE foods_fts MATCH ? "
+          "ORDER BY (CASE WHEN f.kcal IS NOT NULL THEN 0 ELSE 1 END), "
+          // Foods whose name BEGINS with the query are the classic
+          // "banana" -> raw banana result users expect (like MacroFactor).
+          "(CASE WHEN lower(f.name) LIKE ? THEN 0 ELSE 1 END), "
+          "LENGTH(f.name) LIMIT 40";
+      try {
+        return await db.rawQuery(sql, [match, '$prefix%']);
+      } on DatabaseException catch (e) {
+        if (!e.toString().contains('no such column: micros')) rethrow;
+        return await db.rawQuery(
+            sql.replaceFirst(colsMicros, cols), [match]);
+      }
+    }
+
+    // Legacy fallback: LIKE scan (databases built before the FTS index).
     final wheres = <String>[];
     final args = <Object?>[];
     for (final t in tokens) {
       wheres.add('(name LIKE ? OR brand LIKE ?)');
       args.addAll(['%$t%', '%$t%']);
     }
-    // Rank: rows with real nutrition data first (name-only rows with no
-    // kcal would otherwise flood the top with "0 kcal" junk), then products
-    // whose brand matches a query token (brand IS the query word), then
-    // shorter names within a tier.
     final rankExprs = <String>[
       'CASE WHEN kcal IS NOT NULL THEN 0 ELSE 1 END',
     ];
@@ -83,23 +146,14 @@ class Db {
     }
     rankExprs.add('CASE WHEN name LIKE ? THEN 0 ELSE 1 END');
     rankArgs.add('${tokens.last}%');
-    // The bundled DBs built before micronutrient tracking lack the `micros`
-    // column — fall back to a micros-less query so search works on both
-    // schemas (Food.micros is simply untracked for those rows).
-    final withMicros = '''
-      SELECT code, name, brand, country, serving_g, kcal, protein, carbs, fat, fiber, micros
-      FROM foods
-      WHERE ${wheres.join(' AND ')}
-      ORDER BY ${rankExprs.join(', ')}, LENGTH(name)
-      LIMIT 30
-    ''';
-    final withoutMicros = '''
-      SELECT code, name, brand, country, serving_g, kcal, protein, carbs, fat, fiber
-      FROM foods
-      WHERE ${wheres.join(' AND ')}
-      ORDER BY ${rankExprs.join(', ')}, LENGTH(name)
-      LIMIT 30
-    ''';
+    final withMicros =
+        "SELECT $colsMicros FROM foods "
+        "WHERE ${wheres.join(' AND ')} "
+        "ORDER BY ${rankExprs.join(', ')}, LENGTH(name) LIMIT 30";
+    final withoutMicros =
+        "SELECT $cols FROM foods "
+        "WHERE ${wheres.join(' AND ')} "
+        "ORDER BY ${rankExprs.join(', ')}, LENGTH(name) LIMIT 30";
     try {
       return await db.rawQuery(withMicros, [...args, ...rankArgs]);
     } on DatabaseException catch (e) {
@@ -126,7 +180,7 @@ class Db {
   /// (barcode-less whole foods). Results come back before OFF results.
   static Future<List<Food>> searchCommonLocal(String q) async {
     final db = await commonDb();
-    final rows = await _tokenSearch(db, q);
+    final rows = await tokenSearch(db, q);
     return rows.map((r) => _foodFromRow(r, 'common')).toList();
   }
 
@@ -150,7 +204,7 @@ class Db {
   /// The bundled full Open Food Facts database (all ~4.9M named products).
   /// Copied out of the APK on first use; re-copied when the bundled version
   /// changes (marker file `foods_off.db.v<N>`).
-  static const int _foodsDbVersion = 4;
+  static const int _foodsDbVersion = 5;
   /// Newest OFF delta end-timestamp at bundle build time (updates after this
   /// are applied from the daily deltas; see lib/services/food_updates.dart).
   static const int _bundledDeltaTs = 1794984251;
@@ -200,7 +254,7 @@ class Db {
   /// first, then brand-token hits, then shorter names. Best 30.
   static Future<List<Food>> searchOffLocal(String q) async {
     final db = await foodsDb();
-    final rows = await _tokenSearch(db, q);
+    final rows = await tokenSearch(db, q);
     return rows.map((r) => _foodFromRow(r, 'off')).toList();
   }
 
