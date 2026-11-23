@@ -370,6 +370,28 @@ class Recipe {
 /// as foods (per-item meal chips next to the Add button, Servings editor).
 /// Recipe macros are per serving, so servingG is 1 and the detail sheet
 /// runs in 'servings' mode (the amount IS the portion count).
+/// Per-ingredient values for the recipe editor, derived from a picked
+/// food: the food's per-100 g macros and its serving size as the default
+/// amount.
+class IngredientData {
+  final String name;
+  final double grams, kcal, protein, carbs, fat;
+  const IngredientData(this.name, this.grams, this.kcal, this.protein,
+      this.carbs, this.fat);
+}
+
+/// Converts a picked food into recipe-ingredient values. Food macros are
+/// per 100 g — the same semantics the recipe editor stores — and the
+/// default amount is the food's own serving size.
+IngredientData ingredientFromFood(Food f) => IngredientData(
+      f.name,
+      f.servingG > 0 ? f.servingG : 100,
+      f.kcal,
+      f.protein,
+      f.carbs,
+      f.fat,
+    );
+
 /// Dedupes a merged search-result list by normalized name+brand:
 /// the same food arrives from multiple sources ('My food' after the
 /// first add, USDA common foods, Open Food Facts) and used to render

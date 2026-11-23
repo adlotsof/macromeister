@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../db.dart';
 import '../../models.dart';
 import '../../theme.dart';
+import '../log/food_picker_sheet.dart';
 
 class _Ingredient {
   String name;
@@ -19,6 +20,20 @@ class _Ingredient {
       this.protein = 0,
       this.carbs = 0,
       this.fat = 0});
+
+  /// Built from an existing food picked via the search/barcode picker:
+  /// Food macros are per 100 g, matching this class's semantics, and the
+  /// default amount is the food's own serving size.
+  factory _Ingredient.fromFood(Food f) {
+    final d = ingredientFromFood(f);
+    return _Ingredient(
+        name: d.name,
+        grams: d.grams,
+        kcal: d.kcal,
+        protein: d.protein,
+        carbs: d.carbs,
+        fat: d.fat);
+  }
 
   Map<String, Object?> toMap() => {
         'name': name,
@@ -136,7 +151,25 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Fill from an existing food via the same search/barcode
+              // as the add-food sheet — ingredients are foods.
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final f = await showFoodPickerSheet(ctx);
+                  if (f == null) return;
+                  c['name']!.text = f.name;
+                  c['grams']!.text = _num(f.servingG > 0 ? f.servingG : 100);
+                  c['kcal']!.text = _num(f.kcal);
+                  c['protein']!.text = _num(f.protein);
+                  c['carbs']!.text = _num(f.carbs);
+                  c['fat']!.text = _num(f.fat);
+                },
+                icon: const Icon(Icons.search, size: 18),
+                label: const Text('Search or scan a food'),
+              ),
+              const SizedBox(height: 8),
               TextField(
                   controller: c['name'],
                   decoration: const InputDecoration(labelText: 'Name')),
@@ -232,8 +265,17 @@ class _RecipeEditorScreenState extends State<RecipeEditorScreen> {
               const Spacer(),
               TextButton.icon(
                 onPressed: () => setState(() => _ings.add(_Ingredient())),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add'),
+                icon: const Icon(Icons.edit_note, size: 18),
+                label: const Text('Custom'),
+              ),
+              TextButton.icon(
+                onPressed: () async {
+                  final f = await showFoodPickerSheet(context);
+                  if (f == null || !mounted) return;
+                  setState(() => _ings.add(_Ingredient.fromFood(f)));
+                },
+                icon: const Icon(Icons.search, size: 18),
+                label: const Text('Pick food'),
               ),
             ],
           ),

@@ -13,6 +13,7 @@ import '../../db.dart';
 import '../../models.dart';
 import '../../services/camera_permission.dart';
 import '../../services/meal_memory.dart';
+import '../../ui/more/recipe_editor.dart';
 import 'meal_picker.dart';
 import '../../services/food_search.dart';
 import '../../services/openai.dart';
@@ -943,6 +944,13 @@ class _RecipeTabState extends State<_RecipeTab> {
 
   // Recipes log through the SAME flow as foods: the detail sheet with the
   // per-item meal chips next to the Add button and a Servings editor.
+  // Create a recipe right here (was only possible on More -> Recipes).
+  Future<void> _createRecipe() async {
+    await Navigator.push(context,
+        MaterialPageRoute(builder: (_) => const RecipeEditorScreen()));
+    if (mounted) _load();
+  }
+
   Future<void> _logRecipe(Recipe r) async {
     // Recipe macros are stored per serving; the sheet scales them by the
     // logged portion count.
@@ -971,12 +979,16 @@ class _RecipeTabState extends State<_RecipeTab> {
           children: [
             Icon(Icons.menu_book, size: 40, color: MtTheme.textDim),
             const SizedBox(height: 12),
-            Text(
-                'No saved recipes yet. Create one from paste or AI import on the More → Recipes screen, or paste a recipe below.',
-                textAlign: TextAlign.center,
+            Text('No saved recipes yet.', textAlign: TextAlign.center,
                 style: TextStyle(color: MtTheme.textDim)),
             const SizedBox(height: 16),
-              FilledButton.icon(
+            FilledButton.icon(
+              onPressed: _createRecipe,
+              icon: const Icon(Icons.add),
+              label: const Text('Create a recipe'),
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
               onPressed: () => showAddFoodSheet(context,
                   date: widget.date, meal: widget.meal),
               icon: const Icon(Icons.search),
@@ -989,6 +1001,16 @@ class _RecipeTabState extends State<_RecipeTab> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
+        // Create a recipe without leaving the add sheet.
+        ListTile(
+          leading: Icon(Icons.add_circle_outline, color: MtTheme.accent),
+          title: const Text('Create new recipe',
+              style: TextStyle(fontWeight: FontWeight.w600)),
+          subtitle: Text('Name, servings, ingredients with macros',
+              style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
+          onTap: _createRecipe,
+        ),
+        const Divider(height: 1),
         for (final r in _recipes)
           ListTile(
             title: Text(r.name, maxLines: 1, overflow: TextOverflow.ellipsis),
