@@ -420,6 +420,10 @@ class Db {
     hcSync(() => HealthSync.writeMealFromEntry(
         LogEntry.fromMap({...e.toMap(), 'id': id})));
     WidgetSync.push();
+    // The meal selector should follow the meal the user LAST ADDED to,
+    // not merely the last chip they tapped: persist it here so every add
+    // path (search detail, quick add, AI, custom, recipe) updates it.
+    await setSetting('last_meal', e.meal);
     return id;
   }
 

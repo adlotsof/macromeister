@@ -5,6 +5,7 @@
 //    tables; upgrades from <=v4 must drop them.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:macrotrack/db.dart';
+import 'package:macrotrack/models.dart';
 import 'package:path/path.dart' as p;
 import 'package:macrotrack/services/meal_memory.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -37,6 +38,35 @@ void main() {
       expect(await initialMeal(explicit: 'lunch'), 'lunch');
       // ...and the remembered value is untouched until a new selection.
       expect(await initialMeal(), 'dinner');
+    });
+
+    test('adding a food sets the remembered meal to the meal added to',
+        () async {
+      // The picker must follow the LAST meal something was ADDED to —
+      // e.g. after adding to dinner, the next sheet starts at dinner,
+      // even if the user tapped other chips on the way.
+      await Db.insertLog(LogEntry(
+          date: '2026-11-23',
+          meal: 'dinner',
+          name: 'Banana',
+          grams: 120,
+          kcal: 105,
+          protein: 1,
+          carbs: 27,
+          fat: 0));
+      // a later chip tap without an add does not override the last add
+      await rememberMeal('lunch');
+      await Db.insertLog(LogEntry(
+          date: '2026-11-23',
+          meal: 'snack',
+          name: 'Yogurt',
+          grams: 150,
+          kcal: 90,
+          protein: 8,
+          carbs: 6,
+          fat: 4));
+      expect(await initialMeal(), 'snack',
+          reason: 'the most recent ADD wins, not the most recent tap');
     });
 
     test('stale/invalid stored values fall back to snack', () async {

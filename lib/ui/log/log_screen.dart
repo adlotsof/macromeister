@@ -295,7 +295,9 @@ class _TotalsCard extends StatelessWidget {
                   children: [
                     Text(
                       target > 0
-                          ? '${remaining >= 0 ? remaining.round() : '+${(-remaining).round()}'} kcal left'
+                          ? remaining >= 0
+                              ? '${remaining.round()} kcal left'
+                              : '${(-remaining).round()} kcal over'
                           : '— kcal left',
                       style: TextStyle(
                           fontSize: 14,

@@ -5,12 +5,12 @@
 //    (My foods / common / OFF) and returns the picked food.
 // 3. Ingredients built from a picked food adopt the food's per-100 g
 //    macros and serving size.
+// ignore_for_file: deprecated_member_use -- material_ui replacement not published
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:macrotrack/db.dart';
 import 'package:macrotrack/models.dart';
 import 'package:macrotrack/ui/log/add_food_sheet.dart';
-import 'package:macrotrack/ui/log/food_picker_sheet.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
