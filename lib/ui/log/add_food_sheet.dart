@@ -650,14 +650,12 @@ class _AiTabState extends State<_AiTab> {
   }
 
   Future<void> _logAll() async {
-    for (final g in _guesses) {
-      await _logGuess(g, pop: false);
+    for (final g in List.of(_guesses)) {
+      await _logGuess(g);
     }
-    AppState.instance.refresh();
-    if (mounted) Navigator.of(context).pop();
   }
 
-  Future<void> _logGuess(AiFoodGuess g, {bool pop = true}) async {
+  Future<void> _logGuess(AiFoodGuess g) async {
     await Db.insertLog(LogEntry(
       date: widget.date,
       meal: _meal,
@@ -669,7 +667,16 @@ class _AiTabState extends State<_AiTab> {
       fat: g.fat * g.grams / 100,
       fiber: g.fiber * g.grams / 100,
     ));
-    if (pop && mounted) Navigator.of(context).pop();
+    AppState.instance.refresh();
+    // Stay in the sheet: drop the logged guess; the rest can still be
+    // logged or edited.
+    if (!mounted) return;
+    setState(() {
+      _guesses = _guesses.where((x) => x.name != g.name).toList();
+      _error = _guesses.isEmpty
+          ? 'Logged. Add another item or go back.'
+          : null;
+    });
   }
 
   @override
@@ -841,7 +848,14 @@ class _QuickAddTabState extends State<_QuickAddTab> {
       fasted: _fasted,
     ));
     AppState.instance.refresh();
-    if (mounted) Navigator.of(context).pop();
+    // Stay in the sheet: reset the form for the next item.
+    if (!mounted) return;
+    setState(() {
+      for (final c in [_kcal, _protein, _carbs, _fat]) {
+        c.clear();
+      }
+      _error = 'Logged. Add another item or go back.';
+    });
   }
 
   @override

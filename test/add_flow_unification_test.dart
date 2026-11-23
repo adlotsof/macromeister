@@ -53,6 +53,13 @@ void main() {
   group('log entry meal photo', () {
     setUp(() async {
       Db.dbPathOverride = 'macrotrack_photo_entry_test.db';
+      // Remove any stale database from a previous run — resetForTest does
+      // not delete the file itself.
+      final dir = await getDatabasesPath();
+      final f = p.join(dir, 'macrotrack_photo_entry_test.db');
+      if (await databaseFactory.databaseExists(f)) {
+        await databaseFactory.deleteDatabase(f);
+      }
       await Db.resetForTest();
     });
 

@@ -46,12 +46,20 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
   bool _deleting = false;
   late String _meal = widget.meal;
   String? _photoPath; // optional meal photo attached to the logged entry
+  // Mutable editing target: widget.existing in edit mode, cleared after a
+  // save-and-stay reset so the next save creates a NEW food.
+  Food? _editing;
+
   String? _error; // inline error — snackbars hide behind the modal barrier
 
   @override
   void initState() {
     super.initState();
-    final f = widget.existing;
+    _editing = widget.existing;
+    _initControllers(_editing);
+  }
+
+  void _initControllers(Food? f) {
     _name = TextEditingController(text: f?.name ?? '');
     _brand = TextEditingController(text: f?.brand ?? '');
     _serving = TextEditingController(text: _numStr(f?.servingG ?? 100));
@@ -239,7 +247,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
     final serving = _val(_serving) <= 0 ? 100.0 : _val(_serving);
     final micros = _collectMicros();
     final food = Food(
-      id: widget.existing?.id,
+      id: _editing?.id,
       name: name,
       brand: _brand.text.trim(),
       servingG: serving,
@@ -250,8 +258,8 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
       fiber: _val(_fiber),
       micros: micros,
       source: 'custom',
-      offId: widget.existing?.offId,
-      createdAt: widget.existing?.createdAt,
+      offId: _editing?.offId,
+      createdAt: _editing?.createdAt,
     );
     final id = await Db.upsertFood(food);
     if (alsoLog) {
@@ -273,7 +281,35 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
       ));
     }
     AppState.instance.refresh();
-    if (mounted) Navigator.of(context).pop();
+    // Stay in the sheet after logging; reset for the next item.
+    if (!mounted) return;
+    if (alsoLog) {
+      _resetForm();
+      setState(() => _error = 'Logged. Add another item or go back.');
+    } else {
+      setState(() => _error = null);
+    }
+  }
+
+  /// Clears the editor so the next custom food can be entered. Keeps the
+  /// selected meal (the MealPicker is part of the flow).
+  void _resetForm() {
+    _name.clear();
+    _brand.clear();
+    _serving.text = '100';
+    _kcal.clear();
+    _protein.clear();
+    _carbs.clear();
+    _fat.clear();
+    _fiber.clear();
+    _aiDesc.clear();
+    for (final e in _micros.values) {
+      e.clear();
+    }
+    _photoPath = null;
+    // Drop the loaded food so a subsequent save creates a NEW food instead
+    // of overwriting the one just added.
+    _editing = null;
   }
 
   @override
@@ -464,7 +500,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
           ),
           child: const Text('Save to my foods'),
         ),
-        if (widget.existing != null) ...[
+        if (_editing != null) ...[
           const SizedBox(height: 16),
           TextButton.icon(
             onPressed: _deleting
@@ -474,7 +510,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
                     final ok = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                              title: Text('Delete ${widget.existing!.name}?'),
+                              title: Text('Delete ${_editing!.name}?'),
                               content: const Text(
                                   'Existing log entries keep their values, '
                                   'but the food disappears from My foods.'),
@@ -489,7 +525,7 @@ class _CustomFoodEditorState extends State<CustomFoodEditor> {
                             ));
                     if (ok != true || !mounted) return;
                     setState(() => _deleting = true);
-                    await Db.deleteFood(widget.existing!.id!);
+                    await Db.deleteFood(_editing!.id!);
                     AppState.instance.refresh();
                     if (mounted) navigator.pop();
                   },

@@ -105,11 +105,8 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
         fasted: true,
       ));
       AppState.instance.refresh();
-      if (mounted) {
-        Navigator.of(context)
-          ..pop()
-          ..pop();
-      }
+      // Stay in the add-food sheet; the user leaves via the back button.
+      if (mounted) Navigator.of(context).pop();
       return;
     }
     // Save non-custom foods locally so they show up in search later.
@@ -133,11 +130,8 @@ class _FoodDetailSheetState extends State<_FoodDetailSheet> {
       fasted: _fasted,
     ));
     AppState.instance.refresh();
-    if (mounted) {
-      Navigator.of(context)
-        ..pop() // detail sheet
-        ..pop(); // add-food sheet
-    }
+    // Stay in the add-food sheet; the user leaves via the back button.
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
