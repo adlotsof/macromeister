@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../app_state.dart';
 import '../../db.dart';
 import '../../models.dart';
+import 'meal_picker.dart';
 import '../../theme.dart';
 
 Future<void> showEditEntrySheet(BuildContext context, LogEntry entry) {
@@ -36,6 +37,8 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
   String? _error;
   bool _saving = false;
   late String? _photo = widget.entry.photo;
+  late String _meal = widget.entry.meal;
+  late DateTime _date = DateTime.parse(widget.entry.date);
 
   @override
   void initState() {
@@ -75,8 +78,8 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
       final per100 = 100.0 / e.grams;
       final updated = LogEntry(
         id: e.id,
-        date: e.date,
-        meal: e.meal,
+        date: fmtDate(_date),
+        meal: _meal,
         name: e.name,
         brand: e.brand,
         grams: g,
@@ -94,8 +97,8 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
       final kcal = _p(_kcal);
       final updated = LogEntry(
         id: e.id,
-        date: e.date,
-        meal: e.meal,
+        date: fmtDate(_date),
+        meal: _meal,
         name: e.name,
         brand: e.brand,
         grams: 0,
@@ -217,6 +220,33 @@ class _EditEntrySheetState extends State<_EditEntrySheet> {
                           const InputDecoration(labelText: 'Fat g'))),
             ]),
           ],
+          const SizedBox(height: 12),
+          // Move between meals: chips update which meal the entry counts
+          // towards; the date row moves it to another day.
+          MealPicker(initial: widget.entry.meal,
+              onChanged: (m) => setState(() => _meal = m)),
+          const SizedBox(height: 8),
+          Row(children: [
+            Icon(Icons.event_outlined, size: 18, color: MtTheme.textDim),
+            const SizedBox(width: 8),
+            Text('Date: ${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}',
+                style: TextStyle(fontSize: 13)),
+            const SizedBox(width: 8),
+            TextButton(
+                onPressed: _saving
+                    ? null
+                    : () async {
+                        final d = await showDatePicker(
+                            context: context,
+                            initialDate: _date,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100));
+                        if (d != null && mounted) {
+                          setState(() => _date = d);
+                        }
+                      },
+                child: const Text('Move to date')),
+          ]),
           // Meal photo (custom foods can attach one): view, replace, remove.
           if (_photo != null) ...[
             const SizedBox(height: 12),

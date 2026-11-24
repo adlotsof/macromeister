@@ -249,7 +249,9 @@ class _SearchTabState extends State<_SearchTab> {
     final food = await showBarcodeScanner(context);
     if (food == null) return;
     if (!mounted) return;
-    await openFoodDetailSheet(context, food, date: widget.date, meal: widget.meal);
+    final meal = await initialMeal();
+    if (!mounted) return;
+    await openFoodDetailSheet(context, food, date: widget.date, meal: meal);
   }
 
   @override
@@ -332,7 +334,7 @@ class _SearchTabState extends State<_SearchTab> {
                       trailing: Text(
                           '${l.kcal.round()} kcal · ${_fmtG(l.grams)}g',
                           style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
-                      onTap: () {
+                      onTap: () async {
                         // Zero-gram entries (quick add / fasted / recipes)
                         // store totals directly — dividing by grams would
                         // produce Infinity/NaN and corrupt the day totals.
@@ -352,8 +354,10 @@ class _SearchTabState extends State<_SearchTab> {
                         // Previously-logged food: open the detail sheet
                         // prefilled with the logged amount so the serving
                         // can be adjusted before re-adding.
-                        openFoodDetailSheet(context, loggedEntryAsFood(l),
-                            date: widget.date, meal: widget.meal);
+                        final meal = await initialMeal();
+                        if (!context.mounted) return;
+                        await openFoodDetailSheet(context, loggedEntryAsFood(l),
+                            date: widget.date, meal: meal);
                       },
                     ),
                 ],
@@ -369,8 +373,12 @@ class _SearchTabState extends State<_SearchTab> {
                       trailing: Text(
                           f.kcal > 0 ? '${f.kcal.round()} kcal/100g' : '—',
                           style: TextStyle(color: MtTheme.textDim, fontSize: 12)),
-                      onTap: () => openFoodDetailSheet(context, f,
-                          date: widget.date, meal: widget.meal),
+                      onTap: () async {
+                        final meal = await initialMeal();
+                        if (!context.mounted) return;
+                        await openFoodDetailSheet(context, f,
+                            date: widget.date, meal: meal);
+                      },
                       onLongPress: () {
                         // Capture the navigator BEFORE popping: after the
                         // pop this context is deactivated.
@@ -461,7 +469,11 @@ class _SearchTabState extends State<_SearchTab> {
           style: TextStyle(color: MtTheme.textDim, fontSize: 12),
         ),
         trailing: Icon(Icons.chevron_right, color: MtTheme.textDim),
-        onTap: () => openFoodDetailSheet(context, f, date: widget.date, meal: widget.meal),
+        onTap: () async {
+          final meal = await initialMeal();
+          if (!mounted) return;
+          await openFoodDetailSheet(context, f, date: widget.date, meal: meal);
+        },
       );
 
 
@@ -761,8 +773,10 @@ class _AiTabState extends State<_AiTab> {
                   fiber: g.fiber,
                   source: 'ai',
                 );
+                final meal = await initialMeal();
+                if (!mounted) return;
                 await openFoodDetailSheet(context, food,
-                    date: widget.date, meal: widget.meal);
+                    date: widget.date, meal: meal);
               },
             ),
             IconButton(
@@ -955,9 +969,11 @@ class _RecipeTabState extends State<_RecipeTab> {
     // Recipe macros are stored per serving; the sheet scales them by the
     // logged portion count.
     final f = recipePerServingFood(r);
+    final meal = await initialMeal();
+    if (!mounted) return;
     await openFoodDetailSheet(context, f,
         date: widget.date,
-        meal: widget.meal,
+        meal: meal,
         unitLabel: 'servings',
         brandOverride: 'Recipe');
     if (mounted) _load();
