@@ -11,6 +11,10 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
+        // First: JetBrains CDN mirror of Maven Central — Central returns
+        // HTTP 429 to GitHub runner egress IPs, which silently disables the
+        // repo and fails plugin resolution (kotlin 2.4.20, AGP).
+        maven("https://cache-redirector.jetbrains.com/repo.maven.apache.org/maven2")
         google()
         mavenCentral()
         gradlePluginPortal()
